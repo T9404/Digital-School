@@ -29,8 +29,8 @@ public class AuthConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((requests) -> requests
                 .requestMatchers("/auth/register").permitAll()
-                .requestMatchers("/auth/token").permitAll()
-                .requestMatchers("/auth/validate").permitAll()
+                .requestMatchers("/auth/login").permitAll()
+                .requestMatchers("/auth/refresh").permitAll()
                 .anyRequest().authenticated()
         );
 
