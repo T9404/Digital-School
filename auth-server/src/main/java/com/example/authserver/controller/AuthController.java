@@ -3,6 +3,7 @@ package com.example.authserver.controller;
 import com.example.authserver.dto.*;
 import com.example.authserver.entity.EmailVerificationToken;
 import com.example.authserver.enums.DefaultStatus;
+import com.example.authserver.event.OnCreateResetLinkEvent;
 import com.example.authserver.event.OnRegenerateEmailVerificationEvent;
 import com.example.authserver.event.OnUserRegistrationCompleteEvent;
 import com.example.authserver.service.AuthService;
@@ -48,6 +49,16 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("User already exists"));
     }
 
+    @GetMapping("checkEmail")
+    public ResponseEntity<DefaultResponse> checkEmail(@RequestParam("email") String email) {
+        return ResponseEntity.ok(authService.checkEmailInUse(email));
+    }
+
+    @GetMapping("checkUsername")
+    public ResponseEntity<DefaultResponse> checkUsername(@RequestParam("username") String username) {
+        return ResponseEntity.ok(authService.checkUsernameInUse(username));
+    }
+
     @GetMapping("register/resendToken")
     public ResponseEntity<DefaultResponse> resendRegistrationToken(@RequestParam("token") EmailTokenRequest tokenRequest) {
         EmailVerificationToken newToken = authService.remakeRegistrationToken(tokenRequest.token())
@@ -68,7 +79,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> getToken(@RequestBody AuthRequest loginRequest) {
+    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody AuthRequest loginRequest) {
         return ResponseEntity.ok(authService.generateTokens(loginRequest));
     }
 
@@ -81,4 +92,44 @@ public class AuthController {
     public ResponseEntity<DefaultResponse> confirmRegister(@RequestParam("token") EmailTokenRequest tokenRequest) {
         return ResponseEntity.ok(authService.confirmRegister(tokenRequest.token()));
     }
+
+    @PostMapping("/password/forgotLink")
+    public ResponseEntity<DefaultResponse> getForgotPasswordLink(@RequestBody ForgotPasswordRequest forgotPasswordRequest) {
+        return authService.createForgotPasswordToken(forgotPasswordRequest.email())
+                .map(passwordResetToken -> {
+                    UriComponentsBuilder urlBuilder = ServletUriComponentsBuilder
+                            .fromCurrentContextPath()
+                            .path("/auth/password/reset");
+                    OnCreateResetLinkEvent onCreateResetLinkEvent
+                            = new OnCreateResetLinkEvent(passwordResetToken, urlBuilder);
+                    applicationEventPublisher.publishEvent(onCreateResetLinkEvent);
+                    return ResponseEntity.ok(new DefaultResponse(
+                            "User registered successfully. Check your email for confirming",
+                            DefaultStatus.SUCCESS));
+                })
+                .orElseThrow(() -> new RuntimeException("User already exists"));
+    }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<DefaultResponse> resetPassword(@RequestBody PasswordResetRequest passwordResetRequest) {
+        return ResponseEntity.ok(authService.resetPassword(passwordResetRequest));
+    }
+
+
+    /*@PostMapping("/password/reset")
+    public ResponseEntity<DefaultResponse> resetPasswordOld(@RequestBody PasswordResetRequest passwordResetRequest) {
+        return authService.resetPassword(passwordResetRequest)
+                .map(user -> {
+                    OnUserChangePasswordEvent onUserChangePasswordEvent = new OnUserChangePasswordEvent(user);
+                    applicationEventPublisher.publishEvent(onUserChangePasswordEvent);
+                    return ResponseEntity.ok(new DefaultResponse(
+                            "User registered successfully. Check your email for confirming",
+                            DefaultStatus.SUCCESS));
+                })
+                .orElseThrow(() -> new RuntimeException("Error while resetting password"));
+    }*/
+
+
+
+
 }

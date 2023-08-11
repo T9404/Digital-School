@@ -1,6 +1,5 @@
 package com.example.authserver.entity;
 
-import com.example.authserver.enums.TokenStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,19 +11,22 @@ import java.time.Instant;
 @AllArgsConstructor
 @Entity
 @Getter
-public class EmailVerificationToken {
+public class PasswordResetToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(nullable = false, unique = true)
     private String token;
 
-    @Column(name = "expiry_date")
+    @Column(nullable = false)
     private Instant expiryDate;
 
-    @Column(name = "token_status")
-    @Enumerated(EnumType.STRING)
-    private TokenStatus tokenStatus;
+    @Column(nullable = false)
+    private Boolean active;
+
+    @Column(nullable = false)
+    private Boolean claimed;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")

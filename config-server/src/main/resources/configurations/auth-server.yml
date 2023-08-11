@@ -40,6 +40,9 @@ app:
     email:
       verification:
         duration: 900000
+    password:
+      reset:
+        duration: 600000
 
 
 

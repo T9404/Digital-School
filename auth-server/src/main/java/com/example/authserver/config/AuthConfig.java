@@ -28,14 +28,9 @@ public class AuthConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/auth/register").permitAll()
-                .requestMatchers("/auth/login").permitAll()
-                .requestMatchers("/auth/refresh").permitAll()
-                .requestMatchers("/auth/register/confirm").permitAll()
-                .requestMatchers("/auth/register/resendToken").permitAll()
+                .requestMatchers("/auth/**").permitAll()
                 .anyRequest().authenticated()
         );
-
         http.cors(configurer -> configurer.configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues()));
         http.csrf(AbstractHttpConfigurer::disable);
         return http.build();

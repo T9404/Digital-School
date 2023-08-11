@@ -32,4 +32,13 @@ public class MailService {
                 + emailConfirmationUrl);
         mailSender.send(email);
     }
+
+    public void sendResetPasswordLink(String emailConfirmationUrl, String recipientAddress) {
+        SimpleMailMessage email = new SimpleMailMessage();
+        email.setTo(recipientAddress);
+        email.setSubject("Reset Password");
+        email.setText("To reset your password, please click the link below:\n"
+                + emailConfirmationUrl);
+        mailSender.send(email);
+    }
 }
