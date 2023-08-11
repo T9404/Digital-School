@@ -34,6 +34,14 @@ jwt:
     expiration:
       time: 1296000000
 
+# app.token.email.verification.duration
+app:
+  token:
+    email:
+      verification:
+        duration: 900000
+
+
 
 
 management:

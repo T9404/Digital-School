@@ -1,12 +1,12 @@
 package com.example.authserver.service;
 
-import com.example.authserver.dto.AuthRequest;
-import com.example.authserver.dto.AuthResponse;
-import com.example.authserver.dto.RegisterResponse;
+import com.example.authserver.dto.*;
+import com.example.authserver.entity.EmailVerificationToken;
 import com.example.authserver.entity.RefreshToken;
-import com.example.authserver.entity.UserCredential;
+import com.example.authserver.entity.Users;
+import com.example.authserver.enums.DefaultStatus;
 import com.example.authserver.repository.RefreshTokenRepository;
-import com.example.authserver.repository.UserCredentialRepository;
+import com.example.authserver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,11 +15,12 @@ import java.util.Optional;
 
 @Service
 public class AuthService {
-    private UserCredentialRepository repository;
     private PasswordEncoder passwordEncoder;
     private JwtService jwtService;
+    private MailService senderService;
+    private EmailVerificationTokenService emailVerificationTokenService;
     private RefreshTokenRepository tokenRepository;
-    private UserCredentialRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
     public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
@@ -32,33 +33,65 @@ public class AuthService {
     }
 
     @Autowired
+    public void setEmailVerificationTokenService(EmailVerificationTokenService emailVerificationTokenService) {
+        this.emailVerificationTokenService = emailVerificationTokenService;
+    }
+
+    @Autowired
     public void setTokenRepository(RefreshTokenRepository tokenRepository) {
         this.tokenRepository = tokenRepository;
     }
 
     @Autowired
-    public void setRepository(UserCredentialRepository repository) {
-        this.repository = repository;
-    }
-
-    @Autowired
-    public void setUserRepository(UserCredentialRepository userRepository) {
+    public void setUserRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public RegisterResponse saveUser(UserCredential user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        checkUserNotExists(user.getName());
-        repository.save(user);
-        return RegisterResponse.builder()
-                .message("User created successfully")
-                .status("success")
-                .build();
+    @Autowired
+    public void setSenderService(MailService senderService) {
+        this.senderService = senderService;
+    }
+
+    public Optional<Users> saveUser(RegisterRequest registerRequest) {
+        checkUserNotExists(registerRequest.name());
+        Users user = new Users(registerRequest.name(), registerRequest.email(), passwordEncoder.encode(registerRequest.password()));
+        userRepository.save(user);
+        // senderService.sendSimpleEmail("ghubman1@gmail.com", "Subject", "Body");
+        return Optional.of(user);
+    }
+
+    public DefaultResponse confirmRegister(String token) {
+        var emailVerificationToken = emailVerificationTokenService.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+        var user = emailVerificationToken.getUser();
+        if (user.isEmailVerified()) {
+            return new DefaultResponse("User already confirmed", DefaultStatus.ERROR);
+        }
+
+        emailVerificationTokenService.verifyExpiration(emailVerificationToken);
+        emailVerificationToken.setConfirmed();
+        emailVerificationTokenService.save(emailVerificationToken);
+
+        user.setEmailVerified(true);
+        userRepository.save(user);
+        return new DefaultResponse("User confirmed successfully", DefaultStatus.SUCCESS);
+    }
+
+    public Optional<EmailVerificationToken> remakeRegistrationToken(String currentToken) {
+        EmailVerificationToken emailVerificationToken = emailVerificationTokenService.findByToken(currentToken)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+        if (emailVerificationToken.getUser().isEmailVerified()) {
+            return Optional.empty();
+        }
+        return Optional.of(emailVerificationTokenService.updateExistingTokenWithNameAndExpiry(emailVerificationToken));
     }
 
     public AuthResponse generateTokens(AuthRequest authRequest) {
-        var user = repository.findByName(authRequest.username())
+        var user = userRepository.findByName(authRequest.username())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!user.isEmailVerified()) {
+            throw new RuntimeException("User not confirmed");
+        }
         if (passwordEncoder.matches(authRequest.password(), user.getPassword())) {
             var accessToken = jwtService.generateAccessToken(user.getName());
             var refreshToken = jwtService.generateRefreshToken(user.getName());
@@ -74,11 +107,11 @@ public class AuthService {
     public AuthResponse updateTokens(String refreshToken) {
         var token = tokenRepository.findRefreshTokenByToken(refreshToken)
                 .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
-        String username = token.getUserCredential().getName();
+        String username = token.getUser().getName();
         var accessToken = jwtService.generateAccessToken(username);
         var refreshTokenNew = jwtService.generateRefreshToken(username);
 
-        UserCredential user = userRepository.findByName(username)
+        Users user = userRepository.findByName(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         deleteOldToken(token);
         saveUserToken(user, refreshTokenNew);
@@ -93,14 +126,14 @@ public class AuthService {
     }
 
     private void checkUserNotExists(String username) {
-        if (repository.findByName(username).isPresent()) {
+        if (userRepository.findByName(username).isPresent()) {
             throw new RuntimeException("User already exists");
         }
     }
 
-    private void saveUserToken(UserCredential user, String jwtToken) {
+    private void saveUserToken(Users user, String jwtToken) {
         var token = RefreshToken.builder()
-                .userCredential(user)
+                .user(user)
                 .token(jwtToken)
                 .build();
         tokenRepository.save(token);

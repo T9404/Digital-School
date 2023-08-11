@@ -1,25 +1,18 @@
 package com.example.authserver.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.io.File;
-
 @Service
-public class EmailService {
+public class MailService {
     private final JavaMailSender mailSender;
 
     @Autowired
-    public EmailService(JavaMailSender mailSender) {
+    public MailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
-
 
     public void sendSimpleEmail(String toEmail, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -29,5 +22,14 @@ public class EmailService {
         message.setSubject(subject);
         mailSender.send(message);
         System.out.println("Mail Send...");
+    }
+
+    public void sendEmailVerification(String emailConfirmationUrl, String recipientAddress) {
+        SimpleMailMessage email = new SimpleMailMessage();
+        email.setTo(recipientAddress);
+        email.setSubject("Registration Confirmation");
+        email.setText("To confirm your e-mail address, please click the link below:\n"
+                + emailConfirmationUrl);
+        mailSender.send(email);
     }
 }

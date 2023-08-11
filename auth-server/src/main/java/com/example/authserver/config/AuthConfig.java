@@ -31,6 +31,8 @@ public class AuthConfig {
                 .requestMatchers("/auth/register").permitAll()
                 .requestMatchers("/auth/login").permitAll()
                 .requestMatchers("/auth/refresh").permitAll()
+                .requestMatchers("/auth/register/confirm").permitAll()
+                .requestMatchers("/auth/register/resendToken").permitAll()
                 .anyRequest().authenticated()
         );
 
