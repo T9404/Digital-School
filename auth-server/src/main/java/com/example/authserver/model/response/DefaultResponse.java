@@ -1,4 +1,4 @@
-package com.example.authserver.dto;
+package com.example.authserver.model.response;
 
 import com.example.authserver.enums.DefaultStatus;
 

@@ -1,4 +1,4 @@
-package com.example.authserver.config;
+package com.example.authserver.model;
 
 import com.example.authserver.entity.Users;
 import org.springframework.security.core.GrantedAuthority;
@@ -7,7 +7,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 
 public class CustomUserDetails implements UserDetails {
-
     private final String username;
     private final String password;
 

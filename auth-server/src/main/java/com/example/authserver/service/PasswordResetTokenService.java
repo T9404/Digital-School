@@ -1,9 +1,9 @@
 package com.example.authserver.service;
 
-import com.example.authserver.dto.PasswordResetRequest;
-import com.example.authserver.entity.PasswordResetToken;
+import com.example.authserver.model.request.PasswordResetRequest;
 import com.example.authserver.entity.Users;
 import com.example.authserver.repository.PasswordResetTokenRepository;
+import com.example.authserver.entity.PasswordResetToken;
 import com.example.authserver.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,11 +24,9 @@ public class PasswordResetTokenService {
         this.tokenRepository = tokenRepository;
     }
 
-    public PasswordResetToken getValidToken(PasswordResetRequest request) {
-        String tokenId = request.token();
+    public PasswordResetToken getValidToken(PasswordResetRequest request, String tokenId) {
         PasswordResetToken token = tokenRepository.findByToken(tokenId)
                 .orElseThrow(() -> new RuntimeException("Invalid password reset token"));
-
         matchEmail(token, request.email());
         verifyExpiration(token);
         return token;
@@ -52,10 +50,18 @@ public class PasswordResetTokenService {
         return token.getExpiryDate().compareTo(Instant.now()) < 0;
     }
 
+    public boolean isTokenActive(PasswordResetToken token) {
+        return token.getActive();
+    }
+
     private void matchEmail(PasswordResetToken token, String requestEmail) {
         if (token.getUser().getEmail().compareToIgnoreCase(requestEmail) != 0) {
             throw new RuntimeException("Invalid password reset token");
         }
+    }
+
+    public void deleteToken(PasswordResetToken token) {
+        tokenRepository.delete(token);
     }
 
     private void verifyExpiration(PasswordResetToken token) {
@@ -74,18 +80,6 @@ public class PasswordResetTokenService {
         token.setExpiryDate(Instant.now().plusMillis(expiration));
         token.setActive(true);
         token.setClaimed(false);
-        return token;
-    }
-
-    public PasswordResetToken claimToken(PasswordResetToken token) {
-        Users user = token.getUser();
-        token.setClaimed(true);
-
-        /*CollectionUtils.emptyIfNull(repository.findActiveTokensForUser(user))
-                .forEach(t -> t.setActive(false));*/
-        // rewrite comment without CollectionUtils
-        tokenRepository.findAllActiveToken(user).forEach(t -> t.setActive(false));
-
         return token;
     }
 }
