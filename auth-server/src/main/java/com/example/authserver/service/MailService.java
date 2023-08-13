@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import freemarker.template.Configuration;
 
 @Service
 public class MailService {
@@ -12,16 +13,6 @@ public class MailService {
     @Autowired
     public MailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
-    }
-
-    public void sendSimpleEmail(String toEmail, String subject, String body) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("businessmyhomeq@gmail.com");
-        message.setTo(toEmail);
-        message.setText(body);
-        message.setSubject(subject);
-        mailSender.send(message);
-        System.out.println("Mail Send...");
     }
 
     public void sendEmailVerification(String emailConfirmationUrl, String recipientAddress) {
@@ -38,6 +29,15 @@ public class MailService {
         email.setTo(recipientAddress);
         email.setSubject("Reset Password");
         email.setText("To reset your password, please click the link below:\n"
+                + emailConfirmationUrl);
+        mailSender.send(email);
+    }
+
+    public void sendChangeEmail(String emailConfirmationUrl, String recipientAddress) {
+        SimpleMailMessage email = new SimpleMailMessage();
+        email.setTo(recipientAddress);
+        email.setSubject("Change Email");
+        email.setText("To change your email, please click the link below:\n"
                 + emailConfirmationUrl);
         mailSender.send(email);
     }

@@ -8,11 +8,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Getter
 @Setter
-public class OnCreateResetLinkEvent extends ApplicationEvent {
+public class OnCreateResetPasswordLinkEvent extends ApplicationEvent {
     private transient UriComponentsBuilder redirectUrl;
     private transient PasswordResetToken passwordResetToken;
 
-    public OnCreateResetLinkEvent(PasswordResetToken passwordResetToken, UriComponentsBuilder redirectUrl) {
+    public OnCreateResetPasswordLinkEvent(PasswordResetToken passwordResetToken, UriComponentsBuilder redirectUrl) {
         super(passwordResetToken);
         this.passwordResetToken = passwordResetToken;
         this.redirectUrl = redirectUrl;

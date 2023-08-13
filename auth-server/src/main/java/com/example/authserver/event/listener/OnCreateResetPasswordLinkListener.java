@@ -2,7 +2,7 @@ package com.example.authserver.event.listener;
 
 import com.example.authserver.entity.PasswordResetToken;
 import com.example.authserver.entity.Users;
-import com.example.authserver.event.OnCreateResetLinkEvent;
+import com.example.authserver.event.OnCreateResetPasswordLinkEvent;
 import com.example.authserver.service.MailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -10,22 +10,21 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
-public class OnCreateResetLinkListener implements ApplicationListener<OnCreateResetLinkEvent> {
+public class OnCreateResetPasswordLinkListener implements ApplicationListener<OnCreateResetPasswordLinkEvent> {
     private final MailService mailService;
 
     @Autowired
-    public OnCreateResetLinkListener(MailService mailService) {
+    public OnCreateResetPasswordLinkListener(MailService mailService) {
         this.mailService = mailService;
     }
 
-
     @Override
     @Async
-    public void onApplicationEvent(OnCreateResetLinkEvent event) {
+    public void onApplicationEvent(OnCreateResetPasswordLinkEvent event) {
         sendResetLink(event);
     }
 
-    private void sendResetLink(OnCreateResetLinkEvent event) {
+    private void sendResetLink(OnCreateResetPasswordLinkEvent event) {
         PasswordResetToken passwordResetToken = event.getPasswordResetToken();
         Users user = passwordResetToken.getUser();
         String recipientAddress = user.getEmail();

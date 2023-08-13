@@ -12,12 +12,12 @@ import java.time.Instant;
 @AllArgsConstructor
 @Entity
 @Getter
-public class EmailVerificationToken {
+public class EmailCode {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private String token;
+    private String code;
 
     @Column(name = "expiry_date")
     private Instant expiryDate;
@@ -26,7 +26,7 @@ public class EmailVerificationToken {
     @Enumerated(EnumType.STRING)
     private TokenStatus tokenStatus;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private Users user;
 }

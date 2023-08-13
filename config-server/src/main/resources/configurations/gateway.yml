@@ -30,6 +30,12 @@ spring:
           uri: http://localhost:8060
           predicates:
             - Path=/auth/**
+        - id: auth-server
+          uri: http://localhost:8060
+          predicates:
+            - Path=/user/**
+          filters:
+            - AuthenticationFilter
 
 jwt:
   access:

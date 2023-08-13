@@ -1,4 +1,4 @@
-package com.example.authserver.dto;
+package com.example.authserver.model.request;
 
 public record RefreshRequest(String refreshToken) {
 }

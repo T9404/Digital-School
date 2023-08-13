@@ -8,13 +8,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Getter
 @Setter
-public class OnUserRegistrationCompleteEvent extends ApplicationEvent {
+public class OnConfirmEmailEvent extends ApplicationEvent {
     private transient UriComponentsBuilder redirectUrl;
     private Users user;
+    private String emailAddress;
 
-    public OnUserRegistrationCompleteEvent(Users user, UriComponentsBuilder redirectUrl) {
+    public OnConfirmEmailEvent(Users user, UriComponentsBuilder redirectUrl, String emailAddress) {
         super(user);
         this.user = user;
         this.redirectUrl = redirectUrl;
+        this.emailAddress = emailAddress;
     }
 }

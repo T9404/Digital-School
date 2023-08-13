@@ -1,9 +1,9 @@
 package com.example.authserver.entity;
 
+import com.example.authserver.validation.annotation.PasswordComplexity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,9 +24,10 @@ public class Users {
     private String name;
 
     @Email(message = "Email should be valid")
+    @Column(unique = true)
     private String email;
 
-    @Size(min = 8, message = "Password must be 8 characters long")
+    @PasswordComplexity
     private String password;
 
     @Column(nullable = false)
