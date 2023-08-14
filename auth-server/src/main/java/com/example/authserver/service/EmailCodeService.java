@@ -9,17 +9,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Optional;
 
 @Service
 public class EmailCodeService {
-    private final EmailVerificationTokenRepository emailVerificationTokenRepository;
+    private final EmailVerificationTokenRepository repository;
 
     @Value("${app.token.email.verification.duration}")
     private Long emailVerificationTokenExpiryDuration;
 
-    public EmailCodeService(EmailVerificationTokenRepository emailVerificationTokenRepository) {
-        this.emailVerificationTokenRepository = emailVerificationTokenRepository;
+    public EmailCodeService(EmailVerificationTokenRepository repository) {
+        this.repository = repository;
     }
 
     public void createCode(Users user, String token) {
@@ -28,7 +27,7 @@ public class EmailCodeService {
         emailCode.setTokenStatus(TokenStatus.STATUS_PENDING);
         emailCode.setUser(user);
         emailCode.setExpiryDate(Instant.now().plusMillis(emailVerificationTokenExpiryDuration));
-        emailVerificationTokenRepository.save(emailCode);
+        repository.save(emailCode);
     }
 
     public void confirmEmailToken(EmailCode code) {
@@ -48,19 +47,23 @@ public class EmailCodeService {
     }
 
     public EmailCode getConfirmedToken(String token) {
-        EmailCode code = emailVerificationTokenRepository.findByCode(token)
+        EmailCode code = repository.findByCode(token)
                 .orElseThrow(() -> new RuntimeException("Invalid Token"));
-        if (code.getUser().isEmailVerified()) {
-            throw new RuntimeException("Email already confirmed");
-        }
+        ensureEmailNotVerified(code.getUser());
         return code;
     }
 
-    public EmailCode save(EmailCode emailCode) {
-        return emailVerificationTokenRepository.save(emailCode);
+    private void ensureEmailNotVerified(Users user) {
+        if (user.isEmailVerified()) {
+            throw new RuntimeException("Email already confirmed");
+        }
     }
 
-    public void verifyExpiration(EmailCode token) {
+    private EmailCode save(EmailCode emailCode) {
+        return repository.save(emailCode);
+    }
+
+    private void verifyExpiration(EmailCode token) {
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
             throw new RuntimeException("Token has expired");
         }

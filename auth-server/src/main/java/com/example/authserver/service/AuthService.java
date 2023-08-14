@@ -70,7 +70,7 @@ public class AuthService {
         Users user = userService.getUnConfirmedUser(email);
         EmailCode emailCode = emailCodeService.getConfirmedToken(code);
         emailCodeService.confirmEmailToken(emailCode);
-        userService.confirmUserEmail(user);
+        userService.markUserEmailAsVerified(user);
         return new DefaultResponse("User confirmed successfully", DefaultStatus.SUCCESS);
     }
 
@@ -111,7 +111,7 @@ public class AuthService {
     }
 
     public AuthResponse generateTokens(AuthRequest authRequest) {
-        Users user = userService.getVerifiedUser(authRequest.email());
+        Users user = userService.takeVerifiedUser(authRequest);
         refreshTokenService.deleteById(user.getId());
         return createTokens(user);
     }
@@ -145,7 +145,7 @@ public class AuthService {
         RefreshToken token = refreshTokenService.findRefreshToken(refreshToken);
         String email = token.getUser().getEmail();
         Users user = userService.getVerifiedUser(email);
-        refreshTokenService.delete(token);
+        refreshTokenService.deleteById(user.getId());
         return createTokens(user);
     }
 

@@ -56,16 +56,12 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
-
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(accessSecretKey).parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder().setSigningKey(getSignKey(accessSecretKey)).build().parseClaimsJws(token).getBody();
     }
 }

@@ -24,7 +24,7 @@ public class UserController {
     @PostMapping("/changeUsername")
     public ResponseEntity<DefaultResponse> changeUsername(HttpServletRequest request,
                                                           @RequestParam("newUsername") String newUsername) {
-        return ResponseEntity.ok(userService.changeUsername(request, newUsername));
+        return ResponseEntity.ok(userService.updateUsername(request, newUsername));
     }
 
     @PostMapping("/changeEmail")
