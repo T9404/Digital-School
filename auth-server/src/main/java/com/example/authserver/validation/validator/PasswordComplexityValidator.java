@@ -5,7 +5,6 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public class PasswordComplexityValidator implements ConstraintValidator<PasswordComplexity, String> {
-
     @Override
     public boolean isValid(String password, ConstraintValidatorContext context) {
         String regex = "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";

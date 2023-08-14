@@ -1,4 +1,8 @@
 package com.example.authserver.model.request;
 
-public record AuthRequest(String username, String password) {
+import com.example.authserver.validation.annotation.PasswordComplexity;
+import jakarta.validation.constraints.Email;
+
+public record AuthRequest(@Email String email,
+                          @PasswordComplexity String password) {
 }
