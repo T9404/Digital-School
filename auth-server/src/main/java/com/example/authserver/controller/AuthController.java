@@ -19,7 +19,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<DefaultResponse> createNewUser(@RequestBody @Valid RegisterRequest registerRequest) {
-        return ResponseEntity.ok(authService.saveUser(registerRequest));
+        return ResponseEntity.ok(authService.register(registerRequest));
     }
 
     @GetMapping("/checkEmail")

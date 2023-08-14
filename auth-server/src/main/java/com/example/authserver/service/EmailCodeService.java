@@ -31,7 +31,13 @@ public class EmailCodeService {
         emailVerificationTokenRepository.save(emailCode);
     }
 
-    public EmailCode updateExistingTokenWithNameAndExpiry(EmailCode existingToken) {
+    public void confirmEmailToken(EmailCode code) {
+        verifyExpiration(code);
+        code.setTokenStatus(TokenStatus.STATUS_CONFIRMED);
+        save(code);
+    }
+
+    public EmailCode updateExistingTokenWithName(EmailCode existingToken) {
         existingToken.setTokenStatus(TokenStatus.STATUS_PENDING);
         existingToken.setExpiryDate(Instant.now().plusMillis(emailVerificationTokenExpiryDuration));
         return save(existingToken);
@@ -41,8 +47,13 @@ public class EmailCodeService {
         return Util.generateRandomCode();
     }
 
-    public Optional<EmailCode> findByToken(String token) {
-        return emailVerificationTokenRepository.findByCode(token);
+    public EmailCode getConfirmedToken(String token) {
+        EmailCode code = emailVerificationTokenRepository.findByCode(token)
+                .orElseThrow(() -> new RuntimeException("Invalid Token"));
+        if (code.getUser().isEmailVerified()) {
+            throw new RuntimeException("Email already confirmed");
+        }
+        return code;
     }
 
     public EmailCode save(EmailCode emailCode) {

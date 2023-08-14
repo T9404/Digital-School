@@ -12,15 +12,11 @@ import com.example.authserver.entity.PasswordResetToken;
 import com.example.authserver.entity.RefreshToken;
 import com.example.authserver.entity.Users;
 import com.example.authserver.enums.DefaultStatus;
-import com.example.authserver.enums.TokenStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -61,125 +57,63 @@ public class AuthService {
         this.refreshTokenService = refreshTokenService;
     }
 
-    public DefaultResponse saveUser(RegisterRequest registerRequest) {
+    public DefaultResponse register(RegisterRequest registerRequest) {
         checkUserNotExists(registerRequest.name());
         Users user = userService.saveUser(registerRequest);
-        UriComponentsBuilder urlBuilder = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/email/confirm");
-        OnConfirmEmailEvent onConfirmEmailEvent = new OnConfirmEmailEvent(user, urlBuilder, registerRequest.email());
-        applicationEventPublisher.publishEvent(onConfirmEmailEvent);
+        UriComponentsBuilder uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/email/confirm");
+        OnConfirmEmailEvent event = new OnConfirmEmailEvent(user, uri, registerRequest.email());
+        applicationEventPublisher.publishEvent(event);
         return new DefaultResponse("User registered successfully. Check your email for confirming", DefaultStatus.SUCCESS);
     }
 
     public DefaultResponse confirmRegister(String code, String email) {
-        Users user = userService.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        if (user.isEmailVerified()) {
-            return new DefaultResponse("User already confirmed", DefaultStatus.ERROR);
-        }
-        EmailCode emailCode = emailCodeService.findByToken(code)
-                .orElseThrow(() -> new RuntimeException("Invalid token"));
-        confirmEmailToken(emailCode);
-        confirmUser(user);
+        Users user = userService.getUnConfirmedUser(email);
+        EmailCode emailCode = emailCodeService.getConfirmedToken(code);
+        emailCodeService.confirmEmailToken(emailCode);
+        userService.confirmUserEmail(user);
         return new DefaultResponse("User confirmed successfully", DefaultStatus.SUCCESS);
     }
 
-    private void confirmEmailToken(EmailCode code) {
-        emailCodeService.verifyExpiration(code);
-        code.setTokenStatus(TokenStatus.STATUS_CONFIRMED);
-        emailCodeService.save(code);
-    }
-
-    private void confirmUser(Users user) {
-        user.setEmailVerified(true);
-        userService.saveUser(user);
-    }
-
     public DefaultResponse checkEmailInUse(String email) {
-        if (userService.isUserExists(email)) {
+        if (userService.isEmailInUse(email)) {
             return new DefaultResponse("Email already exists", DefaultStatus.ERROR);
         }
         return new DefaultResponse("Email is available", DefaultStatus.SUCCESS);
     }
 
-    public DefaultResponse resendToken(String token) {
-        EmailCode newToken = remakeRegistrationToken(token);
-        UriComponentsBuilder urlBuilder = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/email/confirm");
-        OnConfirmEmailEvent confirmEmailEvent =
-                new OnConfirmEmailEvent(newToken.getUser(), urlBuilder, newToken.getUser().getEmail());
-        applicationEventPublisher.publishEvent(confirmEmailEvent);
+    public DefaultResponse resendToken(String code) {
+        EmailCode newToken = remakeRegistrationToken(code);
+        UriComponentsBuilder uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/email/confirm");
+        OnConfirmEmailEvent event = new OnConfirmEmailEvent(newToken.getUser(), uri, newToken.getUser().getEmail());
+        applicationEventPublisher.publishEvent(event);
         return new DefaultResponse("Check your email for confirming", DefaultStatus.SUCCESS);
     }
 
     private EmailCode remakeRegistrationToken(String currentToken) {
-        EmailCode emailCode = emailCodeService.findByToken(currentToken)
-                .orElseThrow(() -> new RuntimeException("Invalid token"));
-        if (emailCode.getUser().isEmailVerified()) {
-            throw new RuntimeException("Email already confirmed");
-        }
-        return emailCodeService.updateExistingTokenWithNameAndExpiry(emailCode);
+        EmailCode emailCode = emailCodeService.getConfirmedToken(currentToken);
+        return emailCodeService.updateExistingTokenWithName(emailCode);
     }
 
     public DefaultResponse createForgotPasswordToken(String email) {
-        Users user = userService.getUserByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.isEmailVerified()) {
-            throw new RuntimeException("Email not confirmed");
-        }
-        PasswordResetToken token = passwordResetTokenService.createToken(user)
-                .orElseThrow(() -> new RuntimeException("Token not created"));
-        UriComponentsBuilder urlBuilder = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/password/reset");
-        OnCreateResetPasswordLinkEvent onCreateResetPasswordLinkEvent
-                = new OnCreateResetPasswordLinkEvent(token, urlBuilder);
-        applicationEventPublisher.publishEvent(onCreateResetPasswordLinkEvent);
+        Users user = userService.getVerifiedUser(email);
+        PasswordResetToken token = passwordResetTokenService.createToken(user);
+        UriComponentsBuilder uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/password/reset");
+        OnCreateResetPasswordLinkEvent event = new OnCreateResetPasswordLinkEvent(token, uri);
+        applicationEventPublisher.publishEvent(event);
         return new DefaultResponse("Reset password link sent successfully. Check your email for resetting password", DefaultStatus.SUCCESS);
     }
 
     public DefaultResponse resetPassword(PasswordResetRequest request, String tokenId) {
-        PasswordResetToken token = passwordResetTokenService.findTokenById(tokenId)
-                .orElseThrow(() -> new RuntimeException("Token invalid"));
-        if (passwordResetTokenService.isTokenExpired(token)) {
-            throw new RuntimeException("Token expired");
-        }
-        if (!passwordResetTokenService.isTokenActive(token)) {
-            throw new RuntimeException("Token already used");
-        }
-        updateUserPassword(token, request);
-        updateResetToken(token);
+        PasswordResetToken token = passwordResetTokenService.getValidToken(tokenId);
+        userService.updatePassword(request, token.getUser());
+        passwordResetTokenService.updateResetToken(token);
         return new DefaultResponse("Password reset successfully", DefaultStatus.SUCCESS);
     }
 
-
-    private void updateUserPassword(PasswordResetToken token, PasswordResetRequest request) {
-        Users user = token.getUser();
-        if (userService.isEqualPasswords(request.password(), user.getPassword())) {
-            throw new RuntimeException("Password already used");
-        }
-        if (!request.password().equals(request.confirmPassword())) {
-            throw new RuntimeException("Passwords do not match");
-        }
-        userService.updatePassword(request.password(), user);
-    }
-
-    private void updateResetToken(PasswordResetToken token) {
-        passwordResetTokenService.deleteToken(token);
-        token.setActive(false);
-        passwordResetTokenService.save(token);
-    }
-
     public AuthResponse generateTokens(AuthRequest authRequest) {
-        Users user = userService.getUserByName(authRequest.username())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.isEmailVerified()) {
-            throw new RuntimeException("Email not confirmed");
-        }
+        Users user = userService.getVerifiedUser(authRequest.email());
         refreshTokenService.deleteById(user.getId());
-        if (!user.isEmailVerified()) {
-            throw new RuntimeException("Email not confirmed");
-        }
-        if (userService.isEqualPasswords(authRequest.password(), user.getPassword())) {
-            return createTokens(user);
-        }
-        throw new RuntimeException("Invalid password");
+        return createTokens(user);
     }
 
     private AuthResponse createTokens(Users user) {
@@ -192,6 +126,14 @@ public class AuthService {
                 .build();
     }
 
+    private void saveUserToken(Users user, String jwtToken) {
+        RefreshToken token = RefreshToken.builder()
+                .user(user)
+                .token(jwtToken)
+                .build();
+        refreshTokenService.save(token);
+    }
+
     public DefaultResponse checkUsernameInUse(String username) {
         if (userService.getUserByName(username).isPresent()) {
             return new DefaultResponse("Username already exists", DefaultStatus.ERROR);
@@ -201,35 +143,15 @@ public class AuthService {
 
     public AuthResponse updateTokens(String refreshToken) {
         RefreshToken token = refreshTokenService.findRefreshToken(refreshToken);
-        String username = token.getUser().getName();
-        String accessToken = jwtService.generateAccessToken(username);
-        String refreshTokenNew = jwtService.generateRefreshToken(username);
-
-        Users user = userService.getUserByName(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        deleteOldToken(token);
-        saveUserToken(user, refreshTokenNew);
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshTokenNew)
-                .build();
-    }
-
-    private void deleteOldToken(RefreshToken token) {
+        String email = token.getUser().getEmail();
+        Users user = userService.getVerifiedUser(email);
         refreshTokenService.delete(token);
+        return createTokens(user);
     }
 
     private void checkUserNotExists(String username) {
         if (userService.getUserByName(username).isPresent()) {
             throw new RuntimeException("User already exists");
         }
-    }
-
-    private void saveUserToken(Users user, String jwtToken) {
-        RefreshToken token = RefreshToken.builder()
-                .user(user)
-                .token(jwtToken)
-                .build();
-        refreshTokenService.save(token);
     }
 }

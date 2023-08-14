@@ -3,7 +3,9 @@ package com.example.authserver.service;
 import com.example.authserver.entity.EmailCode;
 import com.example.authserver.enums.DefaultStatus;
 import com.example.authserver.event.OnConfirmEmailEvent;
+import com.example.authserver.model.request.AuthRequest;
 import com.example.authserver.model.request.EmailTokenRequest;
+import com.example.authserver.model.request.PasswordResetRequest;
 import com.example.authserver.model.request.RegisterRequest;
 import com.example.authserver.model.response.DefaultResponse;
 import com.example.authserver.model.response.UserResponse;
@@ -65,12 +67,21 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public boolean isUserExists(String email) {
-        return userRepository.existsByEmail(email);
+    public Users getVerifiedUser(String email) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!user.isEmailVerified()) {
+            throw new RuntimeException("Email not confirmed");
+        }
+        return user;
     }
 
-    public Optional<Users> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public Users getVerifiedUser(AuthRequest authRequest) {
+        Users user = getVerifiedUser(authRequest.email());
+        if (!isEqualPasswords(authRequest.password(), user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+        return user;
     }
 
     public Optional<Users> getUserByName(String name) {
@@ -81,12 +92,23 @@ public class UserService {
         return passwordEncoder.matches(password, encodedPassword);
     }
 
-    public Optional<Users> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public Users getUnConfirmedUser(String email) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.isEmailVerified()) {
+            throw new RuntimeException("Email already confirmed");
+        }
+        return user;
     }
 
-    public void updatePassword(String updatedPassword, Users user) {
-        String encodedPassword = passwordEncoder.encode(updatedPassword);
+    public void updatePassword(PasswordResetRequest request, Users user) {
+        if (isEqualPasswords(request.password(), user.getPassword())) {
+            throw new RuntimeException("Password already used");
+        }
+        if (!request.password().equals(request.confirmPassword())) {
+            throw new RuntimeException("Passwords do not match");
+        }
+        String encodedPassword = passwordEncoder.encode(request.password());
         user.setPassword(encodedPassword);
         userRepository.save(user);
     }
@@ -121,6 +143,11 @@ public class UserService {
         return null;
     }
 
+    public void confirmUserEmail(Users user) {
+        user.setEmailVerified(true);
+        saveUser(user);
+    }
+
     public DefaultResponse sendEmailToken(HttpServletRequest httpRequest, String newEmail) {
         Users user = getUserFromRequest(httpRequest);
         if (newEmail.equals(user.getEmail())) {
@@ -147,5 +174,9 @@ public class UserService {
         user.setEmailVerified(true);
         userRepository.save(user);
         return new DefaultResponse("Email confirmed successfully", DefaultStatus.SUCCESS);
+    }
+
+    public boolean isEmailInUse(String email) {
+        return userRepository.existsByEmail(email);
     }
 }

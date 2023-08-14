@@ -32,18 +32,31 @@ public class PasswordResetTokenService {
         return token;
     }
 
-    public Optional<PasswordResetToken> createToken(Users user) {
+    public PasswordResetToken createToken(Users user) {
         PasswordResetToken token = createTokenWithUser(user);
-        return Optional.of(tokenRepository.save(token));
+        return tokenRepository.save(token);
     }
 
     public void save(PasswordResetToken token) {
         tokenRepository.save(token);
     }
 
-    public Optional<PasswordResetToken> findTokenById(String tokenId) {
-        return Optional.ofNullable(tokenRepository.findByToken(tokenId)
-                .orElseThrow(() -> new RuntimeException("Invalid password reset token")));
+    public PasswordResetToken getValidToken(String tokenId) {
+        PasswordResetToken token = tokenRepository.findByToken(tokenId)
+                .orElseThrow(() -> new RuntimeException("Invalid password reset token"));
+        if (isTokenExpired(token)) {
+            throw new RuntimeException("Token expired");
+        }
+        if (!isTokenActive(token)) {
+            throw new RuntimeException("Token already used");
+        }
+        return token;
+    }
+
+    public void updateResetToken(PasswordResetToken token) {
+        deleteToken(token);
+        token.setActive(false);
+        save(token);
     }
 
     public boolean isTokenExpired(PasswordResetToken token) {
