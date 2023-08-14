@@ -1,5 +1,7 @@
 package com.example.authserver.service;
 
+import com.example.authserver.event.OnConfirmEmailEvent;
+import com.example.authserver.event.OnCreateResetPasswordLinkEvent;
 import com.example.authserver.model.request.AuthRequest;
 import com.example.authserver.model.request.PasswordResetRequest;
 import com.example.authserver.model.request.RegisterRequest;
@@ -12,7 +14,11 @@ import com.example.authserver.entity.Users;
 import com.example.authserver.enums.DefaultStatus;
 import com.example.authserver.enums.TokenStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Optional;
 
@@ -23,6 +29,7 @@ public class AuthService {
     private PasswordResetTokenService passwordResetTokenService;
     private RefreshTokenService refreshTokenService;
     private UserService userService;
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
     public void setJwtService(JwtService jwtService) {
@@ -32,6 +39,11 @@ public class AuthService {
     @Autowired
     public void setEmailVerificationTokenService(EmailCodeService emailCodeService) {
         this.emailCodeService = emailCodeService;
+    }
+
+    @Autowired
+    public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Autowired
@@ -49,9 +61,13 @@ public class AuthService {
         this.refreshTokenService = refreshTokenService;
     }
 
-    public Optional<Users> saveUser(RegisterRequest registerRequest) {
+    public DefaultResponse saveUser(RegisterRequest registerRequest) {
         checkUserNotExists(registerRequest.name());
-        return Optional.of(userService.saveUser(registerRequest));
+        Users user = userService.saveUser(registerRequest);
+        UriComponentsBuilder urlBuilder = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/email/confirm");
+        OnConfirmEmailEvent onConfirmEmailEvent = new OnConfirmEmailEvent(user, urlBuilder, registerRequest.email());
+        applicationEventPublisher.publishEvent(onConfirmEmailEvent);
+        return new DefaultResponse("User registered successfully. Check your email for confirming", DefaultStatus.SUCCESS);
     }
 
     public DefaultResponse confirmRegister(String code, String email) {
@@ -85,22 +101,37 @@ public class AuthService {
         return new DefaultResponse("Email is available", DefaultStatus.SUCCESS);
     }
 
-    public Optional<EmailCode> remakeRegistrationToken(String currentToken) {
+    public DefaultResponse resendToken(String token) {
+        EmailCode newToken = remakeRegistrationToken(token);
+        UriComponentsBuilder urlBuilder = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/email/confirm");
+        OnConfirmEmailEvent confirmEmailEvent =
+                new OnConfirmEmailEvent(newToken.getUser(), urlBuilder, newToken.getUser().getEmail());
+        applicationEventPublisher.publishEvent(confirmEmailEvent);
+        return new DefaultResponse("Check your email for confirming", DefaultStatus.SUCCESS);
+    }
+
+    private EmailCode remakeRegistrationToken(String currentToken) {
         EmailCode emailCode = emailCodeService.findByToken(currentToken)
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
         if (emailCode.getUser().isEmailVerified()) {
-            return Optional.empty();
+            throw new RuntimeException("Email already confirmed");
         }
-        return Optional.of(emailCodeService.updateExistingTokenWithNameAndExpiry(emailCode));
+        return emailCodeService.updateExistingTokenWithNameAndExpiry(emailCode);
     }
 
-    public Optional<PasswordResetToken> createForgotPasswordToken(String email) {
+    public DefaultResponse createForgotPasswordToken(String email) {
         Users user = userService.getUserByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (!user.isEmailVerified()) {
             throw new RuntimeException("Email not confirmed");
         }
-        return passwordResetTokenService.createToken(user);
+        PasswordResetToken token = passwordResetTokenService.createToken(user)
+                .orElseThrow(() -> new RuntimeException("Token not created"));
+        UriComponentsBuilder urlBuilder = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/password/reset");
+        OnCreateResetPasswordLinkEvent onCreateResetPasswordLinkEvent
+                = new OnCreateResetPasswordLinkEvent(token, urlBuilder);
+        applicationEventPublisher.publishEvent(onCreateResetPasswordLinkEvent);
+        return new DefaultResponse("Reset password link sent successfully. Check your email for resetting password", DefaultStatus.SUCCESS);
     }
 
     public DefaultResponse resetPassword(PasswordResetRequest request, String tokenId) {

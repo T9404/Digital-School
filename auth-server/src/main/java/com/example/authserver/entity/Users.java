@@ -19,8 +19,8 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(unique = true)
     @NotBlank(message = "Name cannot be null")
+    @Column(unique = true)
     private String name;
 
     @Email(message = "Email should be valid")
