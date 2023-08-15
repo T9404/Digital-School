@@ -4,6 +4,7 @@ import com.example.authserver.model.request.*;
 import com.example.authserver.model.response.AuthResponse;
 import com.example.authserver.model.response.DefaultResponse;
 import com.example.authserver.service.AuthService;
+import com.example.authserver.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,9 +13,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
+    private final UserService userService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
+        this.userService = userService;
     }
 
     @PostMapping("/register")
@@ -24,12 +27,12 @@ public class AuthController {
 
     @GetMapping("/checkEmail")
     public ResponseEntity<DefaultResponse> checkEmail(@RequestParam("email") String email) {
-        return ResponseEntity.ok(authService.checkEmailInUse(email));
+        return ResponseEntity.ok(userService.checkEmailInUse(email));
     }
 
     @GetMapping("/checkUsername")
     public ResponseEntity<DefaultResponse> checkUsername(@RequestParam("username") String username) {
-        return ResponseEntity.ok(authService.checkUsernameInUse(username));
+        return ResponseEntity.ok(userService.checkUsernameInUse(username));
     }
 
     @GetMapping("register/resendToken")

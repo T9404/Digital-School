@@ -1,6 +1,6 @@
 package com.example.authserver.config;
 
-import com.example.authserver.service.CustomUserDetailsService;
+import com.example.authserver.service.implementation.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

@@ -3,6 +3,7 @@ package com.example.authserver.controller;
 import com.example.authserver.model.response.DefaultResponse;
 import com.example.authserver.model.response.UserResponse;
 import com.example.authserver.service.UserService;
+import com.example.authserver.service.implementation.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,9 +29,9 @@ public class UserController {
     }
 
     @PostMapping("/changeEmail")
-    public ResponseEntity<DefaultResponse> sendEmailToken(HttpServletRequest httpRequest,
+    public ResponseEntity<DefaultResponse> changeEmailToken(HttpServletRequest httpRequest,
                                                           @RequestParam("newEmail") String email) {
-        return ResponseEntity.ok(userService.sendEmailToken(httpRequest, email));
+        return ResponseEntity.ok(userService.changeEmailToken(httpRequest, email));
     }
 
     @PostMapping("/confirmEmail")

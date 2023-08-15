@@ -11,12 +11,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class OnConfirmEmailEvent extends ApplicationEvent {
     private transient UriComponentsBuilder redirectUrl;
     private Users user;
-    private String emailAddress;
+    private String newEmailAddress;
 
-    public OnConfirmEmailEvent(Users user, UriComponentsBuilder redirectUrl, String emailAddress) {
+    public OnConfirmEmailEvent(Users user, UriComponentsBuilder redirectUrl, String newEmailAddress) {
         super(user);
         this.user = user;
         this.redirectUrl = redirectUrl;
-        this.emailAddress = emailAddress;
+        this.newEmailAddress = newEmailAddress;
     }
 }

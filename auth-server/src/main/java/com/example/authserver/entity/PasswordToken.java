@@ -11,7 +11,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @Entity
 @Getter
-public class PasswordResetToken {
+public class PasswordToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
