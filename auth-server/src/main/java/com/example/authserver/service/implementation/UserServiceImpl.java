@@ -104,8 +104,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void validatePassword(String firstPassword, String secondPassword) {
-        if (!areEqualPasswords(firstPassword, secondPassword)) {
+    public void validatePassword(String providedPassword, String storedPassword) {
+        if (!areEqualEncodedPasswords(providedPassword, storedPassword)) {
             throw new InvalidPasswordFormatException();
         }
     }
@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByName(name);
     }
 
-    private boolean areEqualPasswords(String password, String encodedPassword) {
+    private boolean areEqualEncodedPasswords(String password, String encodedPassword) {
         return passwordEncoder.matches(password, encodedPassword);
     }
 
@@ -180,13 +180,13 @@ public class UserServiceImpl implements UserService {
     }
 
     private void ensurePasswordNotUsed(String gettingPassword, String userPassword) {
-        if (areEqualPasswords(gettingPassword, userPassword)) {
+        if (areEqualEncodedPasswords(gettingPassword, userPassword)) {
             throw new PasswordAlreadyUsedException();
         }
     }
 
     private void ensurePasswordsMatch(String password, String confirmPassword) {
-        if (!areEqualPasswords(password, confirmPassword)) {
+        if (!password.equals(confirmPassword)) {
             throw new PasswordMismatchException();
         }
     }

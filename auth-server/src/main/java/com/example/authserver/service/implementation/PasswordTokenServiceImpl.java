@@ -69,7 +69,7 @@ public class PasswordTokenServiceImpl implements PasswordTokenService {
     }
 
     private boolean isTokenNotActive(PasswordToken token) {
-        return token.getActive();
+        return !token.getActive();
     }
 
     @Override
