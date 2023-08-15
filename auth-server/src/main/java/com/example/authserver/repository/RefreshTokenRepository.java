@@ -1,7 +1,6 @@
 package com.example.authserver.repository;
 
 import com.example.authserver.entity.RefreshToken;
-import com.example.authserver.entity.Users;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

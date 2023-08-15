@@ -3,7 +3,6 @@ package com.example.authserver.controller;
 import com.example.authserver.model.response.DefaultResponse;
 import com.example.authserver.model.response.UserResponse;
 import com.example.authserver.service.UserService;
-import com.example.authserver.service.implementation.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

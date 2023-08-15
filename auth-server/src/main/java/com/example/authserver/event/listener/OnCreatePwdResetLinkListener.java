@@ -3,6 +3,7 @@ package com.example.authserver.event.listener;
 import com.example.authserver.entity.PasswordToken;
 import com.example.authserver.entity.Users;
 import com.example.authserver.event.OnCreatePwdResetLinkEvent;
+import com.example.authserver.exception.email.CustomMailException;
 import com.example.authserver.service.implementation.MailServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -25,15 +26,14 @@ public class OnCreatePwdResetLinkListener implements ApplicationListener<OnCreat
     }
 
     private void sendResetLink(OnCreatePwdResetLinkEvent event) {
-        PasswordToken passwordToken = event.getPasswordToken();
-        Users user = passwordToken.getUser();
-        String recipientAddress = user.getEmail();
-        String emailConfirmationUrl = event.getRedirectUrl().queryParam("token", passwordToken.getToken())
-                .toUriString();
         try {
+            PasswordToken passwordToken = event.getPasswordToken();
+            Users user = passwordToken.getUser();
+            String recipientAddress = user.getEmail();
+            String emailConfirmationUrl = event.getRedirectUrl().queryParam("token", passwordToken.getToken()).toUriString();
             mailService.sendResetPasswordLink(emailConfirmationUrl, recipientAddress);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (Exception exception) {
+            throw new CustomMailException(exception.getMessage());
         }
     }
 }
