@@ -1,6 +1,7 @@
 package com.example.authserver.service.implementation;
 
 import com.example.authserver.entity.RefreshToken;
+import com.example.authserver.exception.token.TokenNotFoundException;
 import com.example.authserver.repository.RefreshTokenRepository;
 import com.example.authserver.service.RefreshTokenService;
 import org.springframework.stereotype.Service;
@@ -15,8 +16,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     public RefreshToken findRefreshToken(String refreshToken) {
-        return tokenRepository.findRefreshTokenByToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+        return tokenRepository.findRefreshTokenByToken(refreshToken).orElseThrow(TokenNotFoundException::new);
     }
 
     @Override

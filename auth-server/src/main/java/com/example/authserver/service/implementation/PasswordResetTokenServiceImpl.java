@@ -1,6 +1,9 @@
 package com.example.authserver.service.implementation;
 
 import com.example.authserver.entity.Users;
+import com.example.authserver.exception.token.TokenAlreadyUsedException;
+import com.example.authserver.exception.token.TokenExpiredException;
+import com.example.authserver.exception.token.TokenNotFoundException;
 import com.example.authserver.repository.PasswordResetTokenRepository;
 import com.example.authserver.entity.PasswordResetToken;
 import com.example.authserver.service.PasswordResetTokenService;
@@ -43,13 +46,12 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService 
 
     @Override
     public PasswordResetToken getValidToken(String tokenId) {
-        PasswordResetToken token = tokenRepository.findByToken(tokenId)
-                .orElseThrow(() -> new RuntimeException("Invalid password reset token"));
+        PasswordResetToken token = tokenRepository.findByToken(tokenId).orElseThrow(TokenNotFoundException::new);
         if (isTokenExpired(token)) {
-            throw new RuntimeException("Token expired");
+            throw new TokenExpiredException();
         }
         if (!isTokenActive(token)) {
-            throw new RuntimeException("Token already used");
+            throw new TokenAlreadyUsedException();
         }
         return token;
     }

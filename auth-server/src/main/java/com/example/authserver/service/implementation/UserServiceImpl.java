@@ -3,6 +3,15 @@ package com.example.authserver.service.implementation;
 import com.example.authserver.entity.EmailCode;
 import com.example.authserver.enums.DefaultStatus;
 import com.example.authserver.event.OnConfirmEmailEvent;
+import com.example.authserver.exception.email.EmailAlreadyConfirmedException;
+import com.example.authserver.exception.email.EmailNotConfirmedException;
+import com.example.authserver.exception.email.EmailsSameException;
+import com.example.authserver.exception.password.InvalidPasswordException;
+import com.example.authserver.exception.password.PasswordNotMatchException;
+import com.example.authserver.exception.password.PasswordUsedException;
+import com.example.authserver.exception.token.TokenNotFoundException;
+import com.example.authserver.exception.user.UserAlreadyExistsException;
+import com.example.authserver.exception.user.UserNotFoundException;
 import com.example.authserver.model.request.PasswordResetRequest;
 import com.example.authserver.model.request.RegisterRequest;
 import com.example.authserver.model.response.DefaultResponse;
@@ -65,22 +74,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void checkUserNotExists(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new UserAlreadyExistsException();
+        }
+    }
+
+    @Override
     public Users getVerifiedUser(String email) {
-        Users user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
         checkIfEmailConfirm(user);
         return user;
     }
 
     private void checkIfEmailConfirm(Users user) {
         if (!user.isEmailVerified()) {
-            throw new RuntimeException("Email not confirmed");
+            throw new EmailNotConfirmedException();
         }
     }
 
     @Override
     public void validatePassword(String firstPassword, String secondPassword) {
         if (!areEqualPasswords(firstPassword, secondPassword)) {
-            throw new RuntimeException("Invalid password");
+            throw new InvalidPasswordException();
         }
     }
 
@@ -110,14 +126,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Users getUnConfirmedUser(String email) {
-        Users user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
         ensureEmailNotConfirmed(user);
         return user;
     }
 
     private void ensureEmailNotConfirmed(Users user) {
         if (user.isEmailVerified()) {
-            throw new RuntimeException("Email already confirmed");
+            throw new EmailAlreadyConfirmedException();
         }
     }
 
@@ -132,13 +148,13 @@ public class UserServiceImpl implements UserService {
 
     private void ensurePasswordNotUsed(String gettingPassword, String userPassword) {
         if (areEqualPasswords(gettingPassword, userPassword)) {
-            throw new RuntimeException("Password already used");
+            throw new PasswordUsedException();
         }
     }
 
     private void ensurePasswordsMatch(String password, String confirmPassword) {
         if (!areEqualPasswords(password, confirmPassword)) {
-            throw new RuntimeException("Passwords do not match");
+            throw new PasswordNotMatchException();
         }
     }
 
@@ -162,10 +178,9 @@ public class UserServiceImpl implements UserService {
 
     private Users fetchUserFromRequest(HttpServletRequest request) {
         String token = extractTokenFromAuthorizationHeader(request.getHeader("Authorization"))
-                .orElseThrow(() -> new RuntimeException("Token not found"));
+                .orElseThrow(TokenNotFoundException::new);
         String username = jwtService.extractUsername(token);
-        return getUserByName(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        return getUserByName(username).orElseThrow(UserNotFoundException::new);
     }
 
     private Optional<String> extractTokenFromAuthorizationHeader(String header) {
@@ -194,13 +209,13 @@ public class UserServiceImpl implements UserService {
 
     private void ensureEmailsAreDifferent(String newEmail, String oldEmail) {
         if (newEmail.equals(oldEmail)) {
-            throw new RuntimeException("Emails are the same");
+            throw new EmailsSameException();
         }
     }
 
     private void ensureEmailConfirmed(Users user) {
         if (!user.isEmailVerified()) {
-            throw new RuntimeException("Email not confirmed");
+            throw new EmailNotConfirmedException();
         }
     }
 
@@ -216,7 +231,7 @@ public class UserServiceImpl implements UserService {
 
     private void ensureTokenBelongsToUser(Users user, EmailCode emailToken) {
         if (!emailToken.getUser().equals(user)) {
-            throw new RuntimeException("Token doesn't belong to this user");
+            throw new TokenNotFoundException();
         }
     }
 

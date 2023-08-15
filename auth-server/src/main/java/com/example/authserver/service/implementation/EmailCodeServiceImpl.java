@@ -3,6 +3,9 @@ package com.example.authserver.service.implementation;
 import com.example.authserver.entity.EmailCode;
 import com.example.authserver.entity.Users;
 import com.example.authserver.enums.TokenStatus;
+import com.example.authserver.exception.email.EmailAlreadyConfirmedException;
+import com.example.authserver.exception.token.TokenExpiredException;
+import com.example.authserver.exception.token.TokenNotFoundException;
 import com.example.authserver.repository.EmailVerificationTokenRepository;
 import com.example.authserver.service.EmailCodeService;
 import com.example.authserver.util.Util;
@@ -34,8 +37,7 @@ public class EmailCodeServiceImpl implements EmailCodeService {
 
     @Override
     public EmailCode findByCode(String code) {
-        return repository.findByCode(code)
-                .orElseThrow(() -> new RuntimeException("Token not found"));
+        return repository.findByCode(code).orElseThrow(TokenNotFoundException::new);
     }
 
     @Override
@@ -58,16 +60,15 @@ public class EmailCodeServiceImpl implements EmailCodeService {
     }
 
     @Override
-    public EmailCode getConfirmedToken(String token) {
-        EmailCode code = repository.findByCode(token)
-                .orElseThrow(() -> new RuntimeException("Invalid Token"));
+    public EmailCode getConfirmedToken(String codeId) {
+        EmailCode code = repository.findByCode(codeId).orElseThrow(TokenNotFoundException::new);
         ensureEmailNotVerified(code.getUser());
         return code;
     }
 
     private void ensureEmailNotVerified(Users user) {
         if (user.isEmailVerified()) {
-            throw new RuntimeException("Email already confirmed");
+            throw new EmailAlreadyConfirmedException();
         }
     }
 
@@ -77,7 +78,7 @@ public class EmailCodeServiceImpl implements EmailCodeService {
 
     private void verifyExpiration(EmailCode token) {
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
-            throw new RuntimeException("Token has expired");
+            throw new TokenExpiredException();
         }
     }
 }

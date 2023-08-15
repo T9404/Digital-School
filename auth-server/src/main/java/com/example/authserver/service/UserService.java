@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public interface UserService {
     DefaultResponse checkEmailInUse(String email);
     DefaultResponse checkUsernameInUse(String username);
+    void checkUserNotExists(String email);
 
     Users saveUser(RegisterRequest registerRequest);
     Users getVerifiedUser(String email);

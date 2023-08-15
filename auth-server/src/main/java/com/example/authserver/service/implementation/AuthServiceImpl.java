@@ -60,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public DefaultResponse register(RegisterRequest registerRequest) {
-        checkUserNotExists(registerRequest.email());
+        userService.checkUserNotExists(registerRequest.email());
         Users user = userService.saveUser(registerRequest);
         UriComponentsBuilder uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/email/confirm");
         OnConfirmEmailEvent event = new OnConfirmEmailEvent(user, uri, registerRequest.email());
@@ -142,11 +142,5 @@ public class AuthServiceImpl implements AuthService {
         Users user = userService.getVerifiedUser(email);
         refreshTokenService.deleteById(user.getId());
         return createTokens(user);
-    }
-
-    private void checkUserNotExists(String email) {
-        if (userService.getVerifiedUser(email) != null) {
-            throw new RuntimeException("User already exists");
-        }
     }
 }
