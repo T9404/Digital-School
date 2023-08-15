@@ -2,6 +2,7 @@ package com.example.authserver.event.listener;
 
 import com.example.authserver.entity.Users;
 import com.example.authserver.event.OnConfirmEmailEvent;
+import com.example.authserver.exception.email.CustomMailException;
 import com.example.authserver.service.implementation.EmailCodeServiceImpl;
 import com.example.authserver.service.implementation.MailServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,19 +32,30 @@ public class OnConfirmEmailListener implements ApplicationListener<OnConfirmEmai
     }
 
     private void sendEmailVerification(OnConfirmEmailEvent event) {
-        Users user = event.getUser();
-        String token = emailCodeService.generateNewToken();
+        try {
+            String token = generateEmailVerificationToken();
+            createEmailCode(event.getUser(), token);
+            String recipientAddress = event.getNewEmailAddress();
+            String emailConfirmationUrl = buildEmailConfirmationUrl(event, token, recipientAddress);
+            mailService.sendEmailVerification(emailConfirmationUrl, recipientAddress);
+        } catch (Exception exception) {
+            throw new CustomMailException(exception.getMessage());
+        }
+    }
+
+    private String generateEmailVerificationToken() {
+        return emailCodeService.generateNewToken();
+    }
+
+    private void createEmailCode(Users user, String token) {
         emailCodeService.createCode(user, token);
-        String recipientAddress = event.getNewEmailAddress();
-        String emailConfirmationUrl = event
+    }
+
+    private String buildEmailConfirmationUrl(OnConfirmEmailEvent event, String token, String recipientAddress) {
+        return event
                 .getRedirectUrl()
                 .queryParam("token", token)
                 .queryParam("email", recipientAddress)
                 .toUriString();
-        try {
-            mailService.sendEmailVerification(emailConfirmationUrl, recipientAddress);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }

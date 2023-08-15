@@ -1,5 +1,6 @@
 package com.example.authserver.controller;
 
+import com.example.authserver.exception.email.CustomMailException;
 import com.example.authserver.exception.email.EmailAlreadyVerifiedException;
 import com.example.authserver.exception.email.EmailNotVerifiedException;
 import com.example.authserver.exception.email.DuplicateEmailException;
@@ -55,6 +56,11 @@ public class ErrorController {
     @ExceptionHandler(TokenNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleSignerNotFoundException(TokenNotFoundException exception) {
         return handleCustomException(exception, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(CustomMailException.class)
+    public ResponseEntity<ErrorResponse> handleCustomMailException(CustomMailException exception) {
+        return handleCustomException(exception, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(TokenExpiredException.class)

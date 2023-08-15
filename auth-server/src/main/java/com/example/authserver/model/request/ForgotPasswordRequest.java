@@ -1,4 +1,6 @@
 package com.example.authserver.model.request;
 
-public record ForgotPasswordRequest(String email) {
+import jakarta.validation.constraints.Email;
+
+public record ForgotPasswordRequest(@Email String email) {
 }

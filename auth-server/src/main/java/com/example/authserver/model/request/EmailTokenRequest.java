@@ -1,4 +1,6 @@
 package com.example.authserver.model.request;
 
-public record EmailTokenRequest(String email, String code) {
+import jakarta.validation.constraints.Email;
+
+public record EmailTokenRequest(@Email String email, String code) {
 }

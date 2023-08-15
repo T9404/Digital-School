@@ -1,4 +1,6 @@
 package com.example.authserver.model.request;
 
-public record RegisterRequest(String name, String email, String password) {
+import jakarta.validation.constraints.Email;
+
+public record RegisterRequest(String name, @Email String email, String password) {
 }
