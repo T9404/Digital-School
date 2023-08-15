@@ -13,6 +13,7 @@ import com.example.authserver.entity.RefreshToken;
 import com.example.authserver.entity.Users;
 import com.example.authserver.enums.DefaultStatus;
 import com.example.authserver.service.*;
+import com.example.authserver.util.MessageUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -62,10 +63,13 @@ public class AuthServiceImpl implements AuthService {
     public DefaultResponse register(RegisterRequest registerRequest) {
         userService.checkUserNotExists(registerRequest.email());
         Users user = userService.saveUser(registerRequest);
-        UriComponentsBuilder uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/email/confirm");
+        UriComponentsBuilder uri = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path(MessageUtil.getMessage("api.auth.path.confirm-email"));
         OnConfirmEmailEvent event = new OnConfirmEmailEvent(user, uri, registerRequest.email());
         applicationEventPublisher.publishEvent(event);
-        return new DefaultResponse("User registered successfully. Check your email for confirming", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.user.register.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     @Override
@@ -74,16 +78,20 @@ public class AuthServiceImpl implements AuthService {
         EmailCode emailCode = emailCodeService.getConfirmedToken(code);
         emailCodeService.confirmEmailToken(emailCode);
         userService.markUserEmailAsVerified(user);
-        return new DefaultResponse("User confirmed successfully", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.email.confirm.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     @Override
     public DefaultResponse resendToken(String code) {
         EmailCode newToken = remakeRegistrationToken(code);
-        UriComponentsBuilder uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/email/confirm");
+        UriComponentsBuilder uri = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path(MessageUtil.getMessage("api.auth.path.confirm-email"));
         OnConfirmEmailEvent event = new OnConfirmEmailEvent(newToken.getUser(), uri, newToken.getUser().getEmail());
         applicationEventPublisher.publishEvent(event);
-        return new DefaultResponse("Check your email for confirming", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.token.sent.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     private EmailCode remakeRegistrationToken(String currentToken) {
@@ -95,10 +103,13 @@ public class AuthServiceImpl implements AuthService {
     public DefaultResponse createForgotPasswordToken(String email) {
         Users user = userService.getVerifiedUser(email);
         PasswordResetToken token = passwordResetTokenService.createToken(user);
-        UriComponentsBuilder uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth/password/reset");
+        UriComponentsBuilder uri = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path(MessageUtil.getMessage("api.auth.password.reset"));
         OnCreateResetPasswordLinkEvent event = new OnCreateResetPasswordLinkEvent(token, uri);
         applicationEventPublisher.publishEvent(event);
-        return new DefaultResponse("Reset password link sent successfully. Check your email for resetting password", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.password.sent.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     @Override
@@ -106,7 +117,8 @@ public class AuthServiceImpl implements AuthService {
         PasswordResetToken token = passwordResetTokenService.getValidToken(tokenId);
         userService.updatePassword(request, token.getUser());
         passwordResetTokenService.updateResetToken(token);
-        return new DefaultResponse("Password reset successfully", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.password.reset.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     @Override

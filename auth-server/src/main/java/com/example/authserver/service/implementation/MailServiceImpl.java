@@ -18,8 +18,7 @@ public class MailServiceImpl implements MailService {
         SimpleMailMessage email = new SimpleMailMessage();
         email.setTo(recipientAddress);
         email.setSubject("Registration Confirmation");
-        email.setText("To confirm your e-mail address, please click the link below:\n"
-                + emailConfirmationUrl);
+        email.setText("To confirm your e-mail address, please click the link below:\n" + emailConfirmationUrl);
         mailSender.send(email);
     }
 
@@ -28,8 +27,7 @@ public class MailServiceImpl implements MailService {
         SimpleMailMessage email = new SimpleMailMessage();
         email.setTo(recipientAddress);
         email.setSubject("Reset Password");
-        email.setText("To reset your password, please click the link below:\n"
-                + emailConfirmationUrl);
+        email.setText("To reset your password, please click the link below:\n" + emailConfirmationUrl);
         mailSender.send(email);
     }
 }

@@ -4,11 +4,11 @@ import org.apache.commons.text.RandomStringGenerator;
 
 import java.util.UUID;
 
-public class Util {
+public class CodeUtil {
     private static final int CODE_LENGTH = 6;
 
-    private Util() {
-        throw new UnsupportedOperationException("Cannot instantiate a Util class");
+    private CodeUtil() {
+        throw new UnsupportedOperationException(MessageUtil.getMessage("exception.utils.instantiation"));
     }
 
     public static String generateRandomUuid() {

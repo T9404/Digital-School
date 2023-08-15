@@ -21,6 +21,7 @@ import com.example.authserver.repository.UserRepository;
 import com.example.authserver.service.EmailCodeService;
 import com.example.authserver.service.JwtService;
 import com.example.authserver.service.UserService;
+import com.example.authserver.util.MessageUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -103,17 +104,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public DefaultResponse checkUsernameInUse(String username) {
         if (getUserByName(username).isPresent()) {
-            return new DefaultResponse("Username already exists", DefaultStatus.ERROR);
+            return new DefaultResponse(MessageUtil
+                    .getMessage("api.user.is-available.api-response.400.description"), DefaultStatus.ERROR);
         }
-        return new DefaultResponse("Username is available", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.user.is-available.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     @Override
     public DefaultResponse checkEmailInUse(String email) {
         if (isEmailInUse(email)) {
-            return new DefaultResponse("Email already exists", DefaultStatus.ERROR);
+            return new DefaultResponse(MessageUtil
+                    .getMessage("api.email.is-available.api-response.400.description"), DefaultStatus.ERROR);
         }
-        return new DefaultResponse("Email is available", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.email.is-available.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     private Optional<Users> getUserByName(String name) {
@@ -173,7 +178,8 @@ public class UserServiceImpl implements UserService {
         Users user = fetchUserFromRequest(request);
         user.setName(newUsername);
         userRepository.save(user);
-        return new DefaultResponse("Username changed successfully", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.user.change.name.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     private Users fetchUserFromRequest(HttpServletRequest request) {
@@ -201,10 +207,13 @@ public class UserServiceImpl implements UserService {
         Users user = fetchUserFromRequest(httpRequest);
         ensureEmailsAreDifferent(newEmail, user.getEmail());
         ensureEmailConfirmed(user);
-        UriComponentsBuilder uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/confirmEmail");
+        UriComponentsBuilder uri = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path(MessageUtil.getMessage("api.user.path.confirm-email"));
         OnConfirmEmailEvent onConfirmEmailEvent = new OnConfirmEmailEvent(user, uri, newEmail);
         applicationEventPublisher.publishEvent(onConfirmEmailEvent);
-        return new DefaultResponse("Email token sent successfully", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.token.sent.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     private void ensureEmailsAreDifferent(String newEmail, String oldEmail) {
@@ -226,7 +235,8 @@ public class UserServiceImpl implements UserService {
         ensureTokenBelongsToUser(user, emailToken);
         user.setEmail(email);
         markUserEmailAsVerified(user);
-        return new DefaultResponse("Email confirmed successfully", DefaultStatus.SUCCESS);
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.email.confirm.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     private void ensureTokenBelongsToUser(Users user, EmailCode emailToken) {

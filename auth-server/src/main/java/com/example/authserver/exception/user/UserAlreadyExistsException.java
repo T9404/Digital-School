@@ -1,7 +1,10 @@
 package com.example.authserver.exception.user;
 
+import com.example.authserver.util.MessageUtil;
+
 public class UserAlreadyExistsException extends RuntimeException {
+
     public UserAlreadyExistsException() {
-        super("User already exists");
+        super(MessageUtil.getMessage("exception.user.already-exists"));
     }
 }

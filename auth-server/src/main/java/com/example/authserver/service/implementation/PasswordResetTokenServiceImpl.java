@@ -7,7 +7,7 @@ import com.example.authserver.exception.token.TokenNotFoundException;
 import com.example.authserver.repository.PasswordResetTokenRepository;
 import com.example.authserver.entity.PasswordResetToken;
 import com.example.authserver.service.PasswordResetTokenService;
-import com.example.authserver.util.Util;
+import com.example.authserver.util.CodeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +37,7 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService 
     private PasswordResetToken createTokenWithUser(Users user) {
         PasswordResetToken token = new PasswordResetToken();
         token.setUser(user);
-        token.setToken(Util.generateRandomUuid());
+        token.setToken(CodeUtil.generateRandomUuid());
         token.setExpiryDate(Instant.now().plusMillis(expiration));
         token.setActive(true);
         token.setClaimed(false);

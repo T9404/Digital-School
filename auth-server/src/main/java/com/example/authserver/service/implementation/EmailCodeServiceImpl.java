@@ -8,7 +8,7 @@ import com.example.authserver.exception.token.TokenExpiredException;
 import com.example.authserver.exception.token.TokenNotFoundException;
 import com.example.authserver.repository.EmailVerificationTokenRepository;
 import com.example.authserver.service.EmailCodeService;
-import com.example.authserver.util.Util;
+import com.example.authserver.util.CodeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +56,7 @@ public class EmailCodeServiceImpl implements EmailCodeService {
 
     @Override
     public String generateNewToken() {
-        return Util.generateRandomCode();
+        return CodeUtil.generateRandomCode();
     }
 
     @Override
