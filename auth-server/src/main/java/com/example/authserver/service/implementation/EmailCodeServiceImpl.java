@@ -3,7 +3,7 @@ package com.example.authserver.service.implementation;
 import com.example.authserver.entity.EmailCode;
 import com.example.authserver.entity.Users;
 import com.example.authserver.enums.TokenStatus;
-import com.example.authserver.exception.email.EmailAlreadyConfirmedException;
+import com.example.authserver.exception.email.EmailAlreadyVerifiedException;
 import com.example.authserver.exception.token.TokenExpiredException;
 import com.example.authserver.exception.token.TokenNotFoundException;
 import com.example.authserver.repository.EmailVerificationTokenRepository;
@@ -27,11 +27,20 @@ public class EmailCodeServiceImpl implements EmailCodeService {
 
     @Override
     public void createCode(Users user, String code) {
+        EmailCode emailCode = createEmailCode(user, code);
+        saveEmailCode(emailCode);
+    }
+
+    private EmailCode createEmailCode(Users user, String code) {
         EmailCode emailCode = new EmailCode();
         emailCode.setCode(code);
         emailCode.setTokenStatus(TokenStatus.STATUS_PENDING);
         emailCode.setUser(user);
         emailCode.setExpiryDate(Instant.now().plusMillis(emailVerificationTokenExpiryDuration));
+        return emailCode;
+    }
+
+    private void saveEmailCode(EmailCode emailCode) {
         repository.save(emailCode);
     }
 
@@ -43,15 +52,19 @@ public class EmailCodeServiceImpl implements EmailCodeService {
     @Override
     public void confirmEmailToken(EmailCode code) {
         verifyExpiration(code);
+        setTokenAsConfirmed(code);
+        saveCode(code);
+    }
+
+    private void setTokenAsConfirmed(EmailCode code) {
         code.setTokenStatus(TokenStatus.STATUS_CONFIRMED);
-        save(code);
     }
 
     @Override
     public EmailCode updateExistingTokenWithName(EmailCode existingToken) {
         existingToken.setTokenStatus(TokenStatus.STATUS_PENDING);
         existingToken.setExpiryDate(Instant.now().plusMillis(emailVerificationTokenExpiryDuration));
-        return save(existingToken);
+        return saveCode(existingToken);
     }
 
     @Override
@@ -68,11 +81,11 @@ public class EmailCodeServiceImpl implements EmailCodeService {
 
     private void ensureEmailNotVerified(Users user) {
         if (user.isEmailVerified()) {
-            throw new EmailAlreadyConfirmedException();
+            throw new EmailAlreadyVerifiedException();
         }
     }
 
-    private EmailCode save(EmailCode emailCode) {
+    private EmailCode saveCode(EmailCode emailCode) {
         return repository.save(emailCode);
     }
 

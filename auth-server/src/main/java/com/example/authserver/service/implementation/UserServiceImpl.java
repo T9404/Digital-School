@@ -3,12 +3,12 @@ package com.example.authserver.service.implementation;
 import com.example.authserver.entity.EmailCode;
 import com.example.authserver.enums.DefaultStatus;
 import com.example.authserver.event.OnConfirmEmailEvent;
-import com.example.authserver.exception.email.EmailAlreadyConfirmedException;
-import com.example.authserver.exception.email.EmailNotConfirmedException;
-import com.example.authserver.exception.email.EmailsSameException;
-import com.example.authserver.exception.password.InvalidPasswordException;
-import com.example.authserver.exception.password.PasswordNotMatchException;
-import com.example.authserver.exception.password.PasswordUsedException;
+import com.example.authserver.exception.email.EmailAlreadyVerifiedException;
+import com.example.authserver.exception.email.EmailNotVerifiedException;
+import com.example.authserver.exception.email.DuplicateEmailException;
+import com.example.authserver.exception.password.InvalidPasswordFormatException;
+import com.example.authserver.exception.password.PasswordMismatchException;
+import com.example.authserver.exception.password.PasswordAlreadyUsedException;
 import com.example.authserver.exception.token.TokenNotFoundException;
 import com.example.authserver.exception.user.UserAlreadyExistsException;
 import com.example.authserver.exception.user.UserNotFoundException;
@@ -29,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Optional;
 
@@ -67,10 +68,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Users saveUser(RegisterRequest registerRequest) {
+        Users user = createUserFromRequest(registerRequest);
+        return saveUser(user);
+    }
+
+    private Users createUserFromRequest(RegisterRequest registerRequest) {
         Users user = new Users();
         user.setName(registerRequest.name());
         user.setEmail(registerRequest.email());
         user.setPassword(passwordEncoder.encode(registerRequest.password()));
+        return user;
+    }
+
+    private Users saveUser(Users user) {
         return userRepository.save(user);
     }
 
@@ -83,40 +93,59 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Users getVerifiedUser(String email) {
-        Users user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
-        checkIfEmailConfirm(user);
+        Users user = findUserByEmail(email);
+        ensureEmailConfirmed(user);
         return user;
     }
 
-    private void checkIfEmailConfirm(Users user) {
-        if (!user.isEmailVerified()) {
-            throw new EmailNotConfirmedException();
-        }
+    private Users findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
     }
 
     @Override
     public void validatePassword(String firstPassword, String secondPassword) {
         if (!areEqualPasswords(firstPassword, secondPassword)) {
-            throw new InvalidPasswordException();
+            throw new InvalidPasswordFormatException();
         }
     }
 
     @Override
     public DefaultResponse checkUsernameInUse(String username) {
         if (getUserByName(username).isPresent()) {
-            return new DefaultResponse(MessageUtil
-                    .getMessage("api.user.is-available.api-response.400.description"), DefaultStatus.ERROR);
+            return createUserNotAvailableResponse();
         }
+        return createUserAvailableResponse();
+    }
+
+    private DefaultResponse createUserAvailableResponse() {
         return new DefaultResponse(MessageUtil
                 .getMessage("api.user.is-available.api-response.200.description"), DefaultStatus.SUCCESS);
+    }
+
+    private DefaultResponse createUserNotAvailableResponse() {
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.user.is-available.api-response.400.description"), DefaultStatus.ERROR);
     }
 
     @Override
     public DefaultResponse checkEmailInUse(String email) {
         if (isEmailInUse(email)) {
-            return new DefaultResponse(MessageUtil
-                    .getMessage("api.email.is-available.api-response.400.description"), DefaultStatus.ERROR);
+            return createEmailNotAvailableResponse();
         }
+        return createEmailAvailableResponse();
+    }
+
+    private boolean isEmailInUse(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    private DefaultResponse createEmailNotAvailableResponse() {
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.email.is-available.api-response.400.description"), DefaultStatus.ERROR);
+    }
+
+    private DefaultResponse createEmailAvailableResponse() {
         return new DefaultResponse(MessageUtil
                 .getMessage("api.email.is-available.api-response.200.description"), DefaultStatus.SUCCESS);
     }
@@ -131,14 +160,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Users getUnConfirmedUser(String email) {
-        Users user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
+        Users user = findUserByEmail(email);
         ensureEmailNotConfirmed(user);
         return user;
     }
 
     private void ensureEmailNotConfirmed(Users user) {
         if (user.isEmailVerified()) {
-            throw new EmailAlreadyConfirmedException();
+            throw new EmailAlreadyVerifiedException();
         }
     }
 
@@ -147,20 +176,24 @@ public class UserServiceImpl implements UserService {
         ensurePasswordNotUsed(request.password(), user.getPassword());
         ensurePasswordsMatch(request.password(), request.confirmPassword());
         String encodedPassword = passwordEncoder.encode(request.password());
-        user.setPassword(encodedPassword);
-        userRepository.save(user);
+        updateUserPassword(user, encodedPassword);
     }
 
     private void ensurePasswordNotUsed(String gettingPassword, String userPassword) {
         if (areEqualPasswords(gettingPassword, userPassword)) {
-            throw new PasswordUsedException();
+            throw new PasswordAlreadyUsedException();
         }
     }
 
     private void ensurePasswordsMatch(String password, String confirmPassword) {
         if (!areEqualPasswords(password, confirmPassword)) {
-            throw new PasswordNotMatchException();
+            throw new PasswordMismatchException();
         }
+    }
+
+    private void updateUserPassword(Users user, String encodedPassword) {
+        user.setPassword(encodedPassword);
+        saveUser(user);
     }
 
     @Override
@@ -177,29 +210,45 @@ public class UserServiceImpl implements UserService {
     public DefaultResponse updateUsername(HttpServletRequest request, String newUsername) {
         Users user = fetchUserFromRequest(request);
         user.setName(newUsername);
-        userRepository.save(user);
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.user.change.name.api-response.200.description"), DefaultStatus.SUCCESS);
+        saveUser(user);
+        return createUsernameChangedResponse();
     }
 
     private Users fetchUserFromRequest(HttpServletRequest request) {
-        String token = extractTokenFromAuthorizationHeader(request.getHeader("Authorization"))
+        String token = extractAuthorizationToken(request);
+        String username = extractUsernameFromToken(token);
+        return getUserByUsername(username);
+    }
+
+    private String extractAuthorizationToken(HttpServletRequest request) {
+        return extractTokenFromAuthorizationHeader(request.getHeader("Authorization"))
                 .orElseThrow(TokenNotFoundException::new);
-        String username = jwtService.extractUsername(token);
-        return getUserByName(username).orElseThrow(UserNotFoundException::new);
     }
 
     private Optional<String> extractTokenFromAuthorizationHeader(String header) {
-        if (header != null && header.startsWith("Bearer ")) {
+        if (StringUtils.isNotEmpty(header) && header.startsWith("Bearer ")) {
             return Optional.of(header.substring(7));
         }
         return Optional.empty();
     }
 
+    private String extractUsernameFromToken(String token) {
+        return jwtService.extractUsername(token);
+    }
+
+    private Users getUserByUsername(String username) {
+        return getUserByName(username).orElseThrow(UserNotFoundException::new);
+    }
+
+    private DefaultResponse createUsernameChangedResponse() {
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.user.change.name.api-response.200.description"), DefaultStatus.SUCCESS);
+    }
+
     @Override
     public void markUserEmailAsVerified(Users user) {
         user.setEmailVerified(true);
-        userRepository.save(user);
+        saveUser(user);
     }
 
     @Override
@@ -207,36 +256,51 @@ public class UserServiceImpl implements UserService {
         Users user = fetchUserFromRequest(httpRequest);
         ensureEmailsAreDifferent(newEmail, user.getEmail());
         ensureEmailConfirmed(user);
-        UriComponentsBuilder uri = ServletUriComponentsBuilder
-                .fromCurrentContextPath()
-                .path(MessageUtil.getMessage("api.user.path.confirm-email"));
-        OnConfirmEmailEvent onConfirmEmailEvent = new OnConfirmEmailEvent(user, uri, newEmail);
-        applicationEventPublisher.publishEvent(onConfirmEmailEvent);
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.token.sent.api-response.200.description"), DefaultStatus.SUCCESS);
+        sendChangeEmailToken(user, newEmail);
+        return createEmailChangedResponse();
     }
 
     private void ensureEmailsAreDifferent(String newEmail, String oldEmail) {
         if (newEmail.equals(oldEmail)) {
-            throw new EmailsSameException();
+            throw new DuplicateEmailException();
         }
     }
 
     private void ensureEmailConfirmed(Users user) {
         if (!user.isEmailVerified()) {
-            throw new EmailNotConfirmedException();
+            throw new EmailNotVerifiedException();
         }
+    }
+
+    private void sendChangeEmailToken(Users user, String newEmail) {
+        UriComponentsBuilder confirmationUri = buildChangeEmailConfirmationUri();
+        OnConfirmEmailEvent onConfirmEmailEvent = new OnConfirmEmailEvent(user, confirmationUri, newEmail);
+        applicationEventPublisher.publishEvent(onConfirmEmailEvent);
+    }
+
+    private UriComponentsBuilder buildChangeEmailConfirmationUri() {
+        return ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path(MessageUtil.getMessage("api.user.path.confirm-email"));
+    }
+
+    private DefaultResponse createEmailChangedResponse() {
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.token.sent.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 
     @Override
     public DefaultResponse approveEmail(HttpServletRequest httpRequest, String email, String code) {
         Users user = fetchUserFromRequest(httpRequest);
-        EmailCode emailToken = emailCodeService.findByCode(code);
+        EmailCode emailToken = getEmailToken(code);
         ensureTokenBelongsToUser(user, emailToken);
         user.setEmail(email);
         markUserEmailAsVerified(user);
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.email.confirm.api-response.200.description"), DefaultStatus.SUCCESS);
+        return createEmailVerifiedResponse();
+    }
+
+    private EmailCode getEmailToken(String code) {
+        return emailCodeService.findByCode(code);
     }
 
     private void ensureTokenBelongsToUser(Users user, EmailCode emailToken) {
@@ -245,7 +309,8 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private boolean isEmailInUse(String email) {
-        return userRepository.existsByEmail(email);
+    private DefaultResponse createEmailVerifiedResponse() {
+        return new DefaultResponse(MessageUtil
+                .getMessage("api.email.confirm.api-response.200.description"), DefaultStatus.SUCCESS);
     }
 }

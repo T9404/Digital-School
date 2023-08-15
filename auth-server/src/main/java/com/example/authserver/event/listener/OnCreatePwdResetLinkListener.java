@@ -1,8 +1,8 @@
 package com.example.authserver.event.listener;
 
-import com.example.authserver.entity.PasswordResetToken;
+import com.example.authserver.entity.PasswordToken;
 import com.example.authserver.entity.Users;
-import com.example.authserver.event.OnCreateResetPasswordLinkEvent;
+import com.example.authserver.event.OnCreatePwdResetLinkEvent;
 import com.example.authserver.service.implementation.MailServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -10,25 +10,25 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
-public class OnCreateResetPasswordLinkListener implements ApplicationListener<OnCreateResetPasswordLinkEvent> {
+public class OnCreatePwdResetLinkListener implements ApplicationListener<OnCreatePwdResetLinkEvent> {
     private final MailServiceImpl mailService;
 
     @Autowired
-    public OnCreateResetPasswordLinkListener(MailServiceImpl mailService) {
+    public OnCreatePwdResetLinkListener(MailServiceImpl mailService) {
         this.mailService = mailService;
     }
 
     @Override
     @Async
-    public void onApplicationEvent(OnCreateResetPasswordLinkEvent event) {
+    public void onApplicationEvent(OnCreatePwdResetLinkEvent event) {
         sendResetLink(event);
     }
 
-    private void sendResetLink(OnCreateResetPasswordLinkEvent event) {
-        PasswordResetToken passwordResetToken = event.getPasswordResetToken();
-        Users user = passwordResetToken.getUser();
+    private void sendResetLink(OnCreatePwdResetLinkEvent event) {
+        PasswordToken passwordToken = event.getPasswordToken();
+        Users user = passwordToken.getUser();
         String recipientAddress = user.getEmail();
-        String emailConfirmationUrl = event.getRedirectUrl().queryParam("token", passwordResetToken.getToken())
+        String emailConfirmationUrl = event.getRedirectUrl().queryParam("token", passwordToken.getToken())
                 .toUriString();
         try {
             mailService.sendResetPasswordLink(emailConfirmationUrl, recipientAddress);

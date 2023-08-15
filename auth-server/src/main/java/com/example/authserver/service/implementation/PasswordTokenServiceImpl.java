@@ -4,9 +4,9 @@ import com.example.authserver.entity.Users;
 import com.example.authserver.exception.token.TokenAlreadyUsedException;
 import com.example.authserver.exception.token.TokenExpiredException;
 import com.example.authserver.exception.token.TokenNotFoundException;
-import com.example.authserver.repository.PasswordResetTokenRepository;
-import com.example.authserver.entity.PasswordResetToken;
-import com.example.authserver.service.PasswordResetTokenService;
+import com.example.authserver.repository.PasswordTokenRepository;
+import com.example.authserver.entity.PasswordToken;
+import com.example.authserver.service.PasswordTokenService;
 import com.example.authserver.util.CodeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -14,28 +14,28 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 
 @Service
-public class PasswordResetTokenServiceImpl implements PasswordResetTokenService {
-    private final PasswordResetTokenRepository tokenRepository;
+public class PasswordTokenServiceImpl implements PasswordTokenService {
+    private final PasswordTokenRepository tokenRepository;
 
     @Value("${app.token.password.reset.duration}")
     private Long expiration;
 
-    public PasswordResetTokenServiceImpl(PasswordResetTokenRepository tokenRepository) {
+    public PasswordTokenServiceImpl(PasswordTokenRepository tokenRepository) {
         this.tokenRepository = tokenRepository;
     }
 
     @Override
-    public PasswordResetToken createToken(Users user) {
-        PasswordResetToken token = createTokenWithUser(user);
+    public PasswordToken createToken(Users user) {
+        PasswordToken token = createTokenWithUser(user);
         return saveToken(token);
     }
 
-    private PasswordResetToken saveToken(PasswordResetToken token) {
+    private PasswordToken saveToken(PasswordToken token) {
         return tokenRepository.save(token);
     }
 
-    private PasswordResetToken createTokenWithUser(Users user) {
-        PasswordResetToken token = new PasswordResetToken();
+    private PasswordToken createTokenWithUser(Users user) {
+        PasswordToken token = new PasswordToken();
         token.setUser(user);
         token.setToken(CodeUtil.generateRandomUuid());
         token.setExpiryDate(Instant.now().plusMillis(expiration));
@@ -45,33 +45,41 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService 
     }
 
     @Override
-    public PasswordResetToken getValidToken(String tokenId) {
-        PasswordResetToken token = tokenRepository.findByToken(tokenId).orElseThrow(TokenNotFoundException::new);
-        if (isTokenExpired(token)) {
-            throw new TokenExpiredException();
-        }
-        if (!isTokenActive(token)) {
-            throw new TokenAlreadyUsedException();
-        }
+    public PasswordToken getValidToken(String tokenId) {
+        PasswordToken token = findTokenById(tokenId);
+        validateTokenStatus(token);
         return token;
     }
 
-    private boolean isTokenExpired(PasswordResetToken token) {
+    private PasswordToken findTokenById(String tokenId) {
+        return tokenRepository.findByToken(tokenId).orElseThrow(TokenNotFoundException::new);
+    }
+
+    private void validateTokenStatus(PasswordToken token) {
+        if (isTokenExpired(token)) {
+            throw new TokenExpiredException();
+        }
+        if (isTokenNotActive(token)) {
+            throw new TokenAlreadyUsedException();
+        }
+    }
+
+    private boolean isTokenExpired(PasswordToken token) {
         return token.getExpiryDate().compareTo(Instant.now()) < 0;
     }
 
-    private boolean isTokenActive(PasswordResetToken token) {
+    private boolean isTokenNotActive(PasswordToken token) {
         return token.getActive();
     }
 
     @Override
-    public void updateResetToken(PasswordResetToken token) {
+    public void updateResetToken(PasswordToken token) {
         deleteToken(token);
         token.setActive(false);
         saveToken(token);
     }
 
-    private void deleteToken(PasswordResetToken token) {
+    private void deleteToken(PasswordToken token) {
         tokenRepository.delete(token);
     }
 }

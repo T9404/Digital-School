@@ -34,7 +34,7 @@ public class OnConfirmEmailListener implements ApplicationListener<OnConfirmEmai
         Users user = event.getUser();
         String token = emailCodeService.generateNewToken();
         emailCodeService.createCode(user, token);
-        String recipientAddress = event.getEmailAddress();
+        String recipientAddress = event.getNewEmailAddress();
         String emailConfirmationUrl = event
                 .getRedirectUrl()
                 .queryParam("token", token)
