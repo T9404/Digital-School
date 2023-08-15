@@ -1,4 +1,4 @@
-package com.example.authserver.service;
+package com.example.authserver.service.implementation;
 
 import com.example.authserver.entity.Users;
 import com.example.authserver.model.CustomUserDetails;

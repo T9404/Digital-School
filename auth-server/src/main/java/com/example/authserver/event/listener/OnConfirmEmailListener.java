@@ -2,8 +2,8 @@ package com.example.authserver.event.listener;
 
 import com.example.authserver.entity.Users;
 import com.example.authserver.event.OnConfirmEmailEvent;
-import com.example.authserver.service.EmailCodeService;
-import com.example.authserver.service.MailService;
+import com.example.authserver.service.implementation.EmailCodeServiceImpl;
+import com.example.authserver.service.implementation.MailServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
@@ -11,16 +11,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class OnConfirmEmailListener implements ApplicationListener<OnConfirmEmailEvent> {
-    private EmailCodeService emailCodeService;
-    private MailService mailService;
+    private EmailCodeServiceImpl emailCodeService;
+    private MailServiceImpl mailService;
 
     @Autowired
-    public void setEmailVerificationTokenService(EmailCodeService emailCodeService) {
+    public void setEmailVerificationTokenService(EmailCodeServiceImpl emailCodeService) {
         this.emailCodeService = emailCodeService;
     }
 
     @Autowired
-    public void setMailService(MailService mailService) {
+    public void setMailService(MailServiceImpl mailService) {
         this.mailService = mailService;
     }
 
