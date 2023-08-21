@@ -27,12 +27,12 @@ public class SchoolController {
         return ResponseEntity.ok(service.findAllSchools());
     }
 
-    @GetMapping("/with-students/{school-id}")
+    @GetMapping("/with-students/{school-name}")
     public ResponseEntity<FullSchoolResponse> findAllSchools(
-            @PathVariable("school-id") Integer schoolId,
+            @PathVariable("school-name") String schoolName,
             @RequestHeader("Authorization") String authorizationHeader
     ) {
         String token = authorizationHeader.replace("Bearer ", "");
-        return ResponseEntity.ok(service.findSchoolsWithStudents(schoolId, token));
+        return ResponseEntity.ok(service.findSchoolsWithStudents(schoolName, token));
     }
 }

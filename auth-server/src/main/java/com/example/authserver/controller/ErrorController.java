@@ -45,71 +45,85 @@ public class ErrorController {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(UserAlreadyExistsException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleSignerAlreadyExistsException(UserNotFoundException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(TokenNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleSignerNotFoundException(TokenNotFoundException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(CustomMailException.class)
     public ResponseEntity<ErrorResponse> handleCustomMailException(CustomMailException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(TokenExpiredException.class)
     public ResponseEntity<ErrorResponse> handleAlbumAlreadyExistsException(TokenExpiredException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(TokenAlreadyUsedException.class)
     public ResponseEntity<ErrorResponse> handleAlbumNotFoundException(TokenAlreadyUsedException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(PasswordAlreadyUsedException.class)
     public ResponseEntity<ErrorResponse> handleSongNotFoundException(PasswordAlreadyUsedException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
+        log.error(exception.getMessage(), exception);
         return handleBindValidationException(exception);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(PasswordMismatchException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(PasswordMismatchException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(InvalidPasswordFormatException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(InvalidPasswordFormatException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<ErrorResponse> handleEmailsSameException(DuplicateEmailException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(EmailNotVerifiedException.class)
     public ResponseEntity<ErrorResponse> handleEmailNotConfirmedException(EmailNotVerifiedException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(EmailAlreadyVerifiedException.class)
     public ResponseEntity<ErrorResponse> handleEmailAlreadyConfirmedException(EmailAlreadyVerifiedException exception) {
+        log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.CONFLICT);
     }
 

@@ -1,4 +1,4 @@
-package com.example.student;
+package com.example.student.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,5 +19,5 @@ public class Student {
     private String firstname;
     private String lastname;
     private String email;
-    private Integer schoolId;
+    private String schoolName;
 }

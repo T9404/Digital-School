@@ -36,6 +36,13 @@ spring:
             - Path=/user/**
           filters:
             - AuthenticationFilter
+        - id: notification
+          uri: http://localhost:8071
+          predicates:
+            - Path=/notification/**
+          filters:
+            - AuthenticationFilter
+
 
 jwt:
   access:
