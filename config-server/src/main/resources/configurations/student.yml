@@ -5,7 +5,6 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka
 
-
 server:
   port: 8090
 spring:
@@ -21,6 +20,14 @@ spring:
       ddl-auto: update
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  rabbitmq:
+    host: localhost
+    password: guest
+    port: 8080
+    username: guest
+    exchange: user.exchange
+    queue: user.queue
+    routingkey: user.routingkey
 
 management:
   tracing:
