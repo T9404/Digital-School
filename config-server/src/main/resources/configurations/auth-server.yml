@@ -1,0 +1,49 @@
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+
+server:
+  port: 8060
+spring:
+  application:
+    name: auth-server
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: 123
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  access:
+    secret:
+      key: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+    expiration:
+      time: 900000
+  refresh:
+    secret:
+      key: 4A7A7D4177457A5A7234753778214125442A472D4B6150645367566B59703373
+    expiration:
+      time: 1296000000
+
+app:
+  token:
+    email:
+      verification:
+        duration: 900000
+    password:
+      reset:
+        duration: 600000
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0

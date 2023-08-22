@@ -1,0 +1,36 @@
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+server:
+  port: 8071
+spring:
+  application:
+    name: notification
+  rabbitmq:
+    host: localhost
+    password: guest
+    port: 8080
+    username: guest
+    exchange: user.exchange
+    routingkey: user.routingkey
+
+app:
+  url:
+    weather: https://api.open-meteo.com/v1/forecast
+  warning:
+    temperature:
+      hot: 40
+      cold: -30
+    wind:
+      speed: 25
+
+
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
