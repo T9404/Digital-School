@@ -38,7 +38,7 @@ public class WeatherServiceImpl implements WeatherService {
         double temperature = getCurrentWeatherInfo(locationRequest).get("temperature").getAsDouble();
         return MessageResponse.builder()
                 .message(getTemperatureWarning(temperature))
-                .owner("open-meteo.com")
+                .owner("api.weather.owner")
                 .schoolName(schoolName)
                 .myDate(new Date())
                 .build();
@@ -46,9 +46,9 @@ public class WeatherServiceImpl implements WeatherService {
 
     private String getTemperatureWarning(double temperature) {
         if (temperature < coldWeatherWarning || temperature > hotWeatherWarning) {
-            return "WARNING. Children should not go outside. Temperature: " + temperature + " degrees";
+            return "api.warning.bad-temperature";
         }
-        return "It's safe to go outside. Temperature: " + temperature + " degrees";
+        return "api.good.temperature";
     }
 
     @Override
@@ -64,9 +64,9 @@ public class WeatherServiceImpl implements WeatherService {
 
     private String getWindWarning(double windSpeed) {
         if (windSpeed > windSpeedWarning) {
-            return "WARNING. Children should not go outside. Wind speed: " + windSpeed + " m/s";
+            return "api.warning.bad-wind";
         }
-        return "It's safe to go outside. Wind speed: " + windSpeed + " m/s";
+        return "api.good.wind";
     }
 
     private JsonObject getCurrentWeatherInfo(LocationRequest locationRequest) {
