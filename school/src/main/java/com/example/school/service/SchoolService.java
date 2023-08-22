@@ -1,6 +1,9 @@
-package com.example.school;
+package com.example.school.service;
 
 import com.example.school.client.StudentClient;
+import com.example.school.dto.FullSchoolResponse;
+import com.example.school.entity.School;
+import com.example.school.repository.SchoolRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

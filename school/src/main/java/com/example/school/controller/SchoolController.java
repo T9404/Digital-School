@@ -1,5 +1,8 @@
-package com.example.school;
+package com.example.school.controller;
 
+import com.example.school.dto.FullSchoolResponse;
+import com.example.school.entity.School;
+import com.example.school.service.SchoolService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

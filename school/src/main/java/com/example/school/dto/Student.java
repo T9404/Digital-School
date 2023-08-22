@@ -1,4 +1,4 @@
-package com.example.school;
+package com.example.school.dto;
 
 import lombok.*;
 
