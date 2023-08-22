@@ -2,7 +2,7 @@
 
 This project demonstrates a microservices architecture using Spring Boot, along with various technologies for service discovery, communication, security, and more. The project consists of the following microservices:
 
-- **auth-server**: Handles user authentication and authorization using JWT and OAuth 2.0.
+- **auth-server**: Handles user authentication and authorization using JWT.
 - **config-server**: Centralized configuration management for all microservices.
 - **discovery**: Utilizes Eureka for service discovery and registration.
 - **gateway**: Acts as an API gateway, routing requests to appropriate microservices.
