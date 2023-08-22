@@ -19,7 +19,6 @@ This project demonstrates a microservices architecture using Spring Boot, along 
 - **RabbitMQ**: Messaging broker for inter-microservice communication.
 - **JWT**: JSON Web Tokens for secure authentication.
 - **Open-Meteo API**: Used to fetch weather data.
-- **OpenAPI**: Used to document the REST APIs.
 
 ## Microservices Communication
 
