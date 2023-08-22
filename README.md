@@ -6,7 +6,7 @@ This project demonstrates a microservices architecture using Spring Boot, along 
 - **config-server**: Centralized configuration management for all microservices.
 - **discovery**: Utilizes Eureka for service discovery and registration.
 - **gateway**: Acts as an API gateway, routing requests to appropriate microservices.
-- **notification**: Manages notification of temperature, wind speed to children and school staff
+- **notification**: Manages notification of weather to children and school staff
 - **school**: Handles school-related operations.
 - **student**: Manages student-related operations.
 
