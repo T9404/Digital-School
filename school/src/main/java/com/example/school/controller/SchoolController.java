@@ -28,6 +28,7 @@ public class SchoolController {
         return ResponseEntity.ok(service.findAllSchools());
     }
 
+
     @GetMapping("/with-students/{school-name}")
     public ResponseEntity<FullSchoolResponse> findAllSchools(@PathVariable("school-name") String schoolName,
                                                              @RequestHeader("Authorization") String authorizationHeader) {
