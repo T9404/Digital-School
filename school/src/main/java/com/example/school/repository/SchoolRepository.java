@@ -1,5 +1,6 @@
-package com.example.school;
+package com.example.school.repository;
 
+import com.example.school.entity.School;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

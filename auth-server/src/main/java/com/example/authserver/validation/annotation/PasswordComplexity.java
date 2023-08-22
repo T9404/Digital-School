@@ -14,6 +14,8 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = PasswordComplexityValidator.class)
 public @interface PasswordComplexity {
     String message() default "Password must contain at least one digit, uppercase letter, special character";
+
     Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 }

@@ -8,8 +8,12 @@ import java.util.List;
 
 public interface StudentService {
     void notifyStudents(Message message);
+
     List<Notification> getNotificationByStudentId(String studentName);
+
     List<Student> findAllStudentsBySchool(String schoolName);
+
     List<Student> findAllStudents();
+
     void saveStudent(Student student);
 }

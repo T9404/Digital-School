@@ -29,7 +29,7 @@ public class UserController {
 
     @PostMapping("/changeEmail")
     public ResponseEntity<DefaultResponse> changeEmailToken(HttpServletRequest httpRequest,
-                                                          @RequestParam("newEmail") String email) {
+                                                            @RequestParam("newEmail") String email) {
         return ResponseEntity.ok(userService.changeEmailToken(httpRequest, email));
     }
 

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RefreshTokenServiceImpl implements RefreshTokenService {
-    private  final RefreshTokenRepository tokenRepository;
+    private final RefreshTokenRepository tokenRepository;
 
     public RefreshTokenServiceImpl(RefreshTokenRepository tokenRepository) {
         this.tokenRepository = tokenRepository;
