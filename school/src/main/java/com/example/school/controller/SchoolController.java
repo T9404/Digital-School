@@ -19,9 +19,7 @@ public class SchoolController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void save(
-            @RequestBody School school
-    ) {
+    public void save(@RequestBody School school) {
         service.saveSchool(school);
     }
 
@@ -31,10 +29,8 @@ public class SchoolController {
     }
 
     @GetMapping("/with-students/{school-name}")
-    public ResponseEntity<FullSchoolResponse> findAllSchools(
-            @PathVariable("school-name") String schoolName,
-            @RequestHeader("Authorization") String authorizationHeader
-    ) {
+    public ResponseEntity<FullSchoolResponse> findAllSchools(@PathVariable("school-name") String schoolName,
+                                                             @RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.replace("Bearer ", "");
         return ResponseEntity.ok(service.findSchoolsWithStudents(schoolName, token));
     }

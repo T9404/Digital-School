@@ -1,6 +1,6 @@
 package com.example.authserver.controller;
 
-import com.example.authserver.exception.email.CustomMailException;
+import com.example.authserver.exception.email.CustomEmailException;
 import com.example.authserver.exception.email.EmailAlreadyVerifiedException;
 import com.example.authserver.exception.email.EmailNotVerifiedException;
 import com.example.authserver.exception.email.DuplicateEmailException;
@@ -29,11 +29,11 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @RestControllerAdvice
-public class ErrorController {
-    private static final Logger log = LoggerFactory.getLogger(ErrorController.class);
+public class ErrorControllerAdvice {
+    private static final Logger log = LoggerFactory.getLogger(ErrorControllerAdvice.class);
     private final PropertyResolverUtils propertyResolverUtils;
 
-    public ErrorController(PropertyResolverUtils propertyResolverUtils) {
+    public ErrorControllerAdvice(PropertyResolverUtils propertyResolverUtils) {
         this.propertyResolverUtils = propertyResolverUtils;
     }
 
@@ -61,8 +61,8 @@ public class ErrorController {
         return handleCustomException(exception, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(CustomMailException.class)
-    public ResponseEntity<ErrorResponse> handleCustomMailException(CustomMailException exception) {
+    @ExceptionHandler(CustomEmailException.class)
+    public ResponseEntity<ErrorResponse> handleCustomMailException(CustomEmailException exception) {
         log.error(exception.getMessage(), exception);
         return handleCustomException(exception, HttpStatus.INTERNAL_SERVER_ERROR);
     }

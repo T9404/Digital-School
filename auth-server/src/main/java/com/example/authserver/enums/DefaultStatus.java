@@ -4,8 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum DefaultStatus {
-    SUCCESS("success"),
-    ERROR("error");
+    SUCCESS("api.default.status.success"),
+    ERROR("api.default.status.error");
 
     private final String status;
 

@@ -2,7 +2,7 @@ package com.example.authserver.event.listener;
 
 import com.example.authserver.entity.Users;
 import com.example.authserver.event.OnConfirmEmailEvent;
-import com.example.authserver.exception.email.CustomMailException;
+import com.example.authserver.exception.email.CustomEmailException;
 import com.example.authserver.service.implementation.EmailCodeServiceImpl;
 import com.example.authserver.service.implementation.MailServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +39,7 @@ public class OnConfirmEmailListener implements ApplicationListener<OnConfirmEmai
             String emailConfirmationUrl = buildEmailConfirmationUrl(event, token, recipientAddress);
             mailService.sendEmailVerification(emailConfirmationUrl, recipientAddress);
         } catch (Exception exception) {
-            throw new CustomMailException(exception.getMessage());
+            throw new CustomEmailException();
         }
     }
 

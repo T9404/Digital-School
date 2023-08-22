@@ -19,11 +19,11 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @NotBlank(message = "Name cannot be null")
+    @NotBlank(message = "api.user.entity.name")
     @Column(unique = true)
     private String name;
 
-    @Email(message = "Email should be valid")
+    @Email(message = "api.user.entity.mail")
     @Column(unique = true)
     private String email;
 

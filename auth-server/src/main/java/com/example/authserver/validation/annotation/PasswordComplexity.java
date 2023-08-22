@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = PasswordComplexityValidator.class)
 public @interface PasswordComplexity {
-    String message() default "Password must contain at least one digit, uppercase letter, special character";
+    String message() default "api.warning.password.complexity";
 
     Class<?>[] groups() default {};
 

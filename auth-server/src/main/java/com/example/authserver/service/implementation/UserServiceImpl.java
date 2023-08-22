@@ -21,7 +21,6 @@ import com.example.authserver.repository.UserRepository;
 import com.example.authserver.service.EmailCodeService;
 import com.example.authserver.service.JwtService;
 import com.example.authserver.service.UserService;
-import com.example.authserver.util.MessageUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -119,13 +118,11 @@ public class UserServiceImpl implements UserService {
     }
 
     private DefaultResponse createUserAvailableResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.user.is-available.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.user.is-available.api-response.200.description", DefaultStatus.SUCCESS);
     }
 
     private DefaultResponse createUserNotAvailableResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.user.is-available.api-response.400.description"), DefaultStatus.ERROR);
+        return new DefaultResponse("api.user.is-available.api-response.400.description", DefaultStatus.ERROR);
     }
 
     @Override
@@ -141,13 +138,11 @@ public class UserServiceImpl implements UserService {
     }
 
     private DefaultResponse createEmailNotAvailableResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.email.is-available.api-response.400.description"), DefaultStatus.ERROR);
+        return new DefaultResponse("api.email.is-available.api-response.400.description", DefaultStatus.ERROR);
     }
 
     private DefaultResponse createEmailAvailableResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.email.is-available.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.email.is-available.api-response.200.description", DefaultStatus.SUCCESS);
     }
 
     private Optional<Users> getUserByName(String name) {
@@ -241,8 +236,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private DefaultResponse createUsernameChangedResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.user.change.name.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.user.change.name.api-response.200.description", DefaultStatus.SUCCESS);
     }
 
     @Override
@@ -281,12 +275,11 @@ public class UserServiceImpl implements UserService {
     private UriComponentsBuilder buildChangeEmailConfirmationUri() {
         return ServletUriComponentsBuilder
                 .fromCurrentContextPath()
-                .path(MessageUtil.getMessage("api.user.path.confirm-email"));
+                .path("api.user.path.confirm-email");
     }
 
     private DefaultResponse createEmailChangedResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.token.sent.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.token.sent.api-response.200.description", DefaultStatus.SUCCESS);
     }
 
     @Override
@@ -310,7 +303,6 @@ public class UserServiceImpl implements UserService {
     }
 
     private DefaultResponse createEmailVerifiedResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.email.confirm.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.email.confirm.api-response.200.description", DefaultStatus.SUCCESS);
     }
 }

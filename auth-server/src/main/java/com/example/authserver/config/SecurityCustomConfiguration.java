@@ -18,7 +18,7 @@ import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
-public class AuthConfig {
+public class SecurityCustomConfiguration {
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -30,6 +30,14 @@ public class AuthConfig {
         http.authorizeHttpRequests((requests) -> requests
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/user/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
+                .requestMatchers("/configuration/**").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/webjars/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
+                .requestMatchers("/v2/api-docs").permitAll()
                 .anyRequest().authenticated()
         );
         http.cors(configurer -> configurer.configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues()));

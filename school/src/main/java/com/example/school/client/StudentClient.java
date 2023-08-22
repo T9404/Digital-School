@@ -14,6 +14,5 @@ public interface StudentClient {
     @GetMapping("/school/{school-name}")
     List<Student> findAllStudentsBySchool(
             @PathVariable("school-name") String schoolName,
-            @RequestHeader("Authorization") String authorizationHeader
-    );
+            @RequestHeader("Authorization") String authorizationHeader);
 }

@@ -13,7 +13,6 @@ import com.example.authserver.entity.RefreshToken;
 import com.example.authserver.entity.Users;
 import com.example.authserver.enums.DefaultStatus;
 import com.example.authserver.service.*;
-import com.example.authserver.util.MessageUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -79,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
     private UriComponentsBuilder buildConfirmationUri() {
         return ServletUriComponentsBuilder
                 .fromCurrentContextPath()
-                .path(MessageUtil.getMessage("api.auth.path.confirm-email"));
+                .path("api.auth.path.confirm-email");
     }
 
     private void sendConfirmationEmail(Users user, UriComponentsBuilder confirmationUri) {
@@ -88,8 +87,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private DefaultResponse createUserCreatedSuccessResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.user.register.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.user.register.api-response.200.description", DefaultStatus.SUCCESS);
     }
 
     @Override
@@ -118,8 +116,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private DefaultResponse createEmailConfirmedSuccessResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.email.confirm.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.email.confirm.api-response.200.description", DefaultStatus.SUCCESS);
     }
 
     @Override
@@ -136,8 +133,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private DefaultResponse createTokenSendSuccessResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.token.sent.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.token.sent.api-response.200.description", DefaultStatus.SUCCESS);
     }
 
     @Override
@@ -160,7 +156,7 @@ public class AuthServiceImpl implements AuthService {
     private UriComponentsBuilder buildResetPasswordUri() {
         return ServletUriComponentsBuilder
                 .fromCurrentContextPath()
-                .path(MessageUtil.getMessage("api.auth.password.reset"));
+                .path("api.auth.password.reset");
     }
 
     private void sendPasswordResetEvent(PasswordToken token, UriComponentsBuilder resetPasswordUri) {
@@ -169,8 +165,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private DefaultResponse createPasswordSentSuccessResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.password.sent.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.password.sent.api-response.200.description", DefaultStatus.SUCCESS);
     }
 
     @Override
@@ -195,8 +190,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private DefaultResponse createPasswordResetSuccessResponse() {
-        return new DefaultResponse(MessageUtil
-                .getMessage("api.password.reset.api-response.200.description"), DefaultStatus.SUCCESS);
+        return new DefaultResponse("api.password.reset.api-response.200.description", DefaultStatus.SUCCESS);
     }
 
     @Override

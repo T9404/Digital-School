@@ -13,6 +13,12 @@ public class RouteValidator {
             "/auth/register",
             "/auth/login",
             "/auth/refresh",
+            "/auth/checkEmail",
+            "/auth/checkUsername",
+            "/auth/register/resendToken",
+            "/auth/email/confirm",
+            "/auth/password/forgotLink",
+            "/auth/password/reset",
             "/eureka"
     );
 

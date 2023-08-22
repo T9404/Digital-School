@@ -8,7 +8,7 @@ public class CodeUtil {
     private static final int CODE_LENGTH = 6;
 
     private CodeUtil() {
-        throw new UnsupportedOperationException(MessageUtil.getMessage("exception.utils.instantiation"));
+        throw new UnsupportedOperationException("api.custom.exception.utils.instantiation");
     }
 
     public static String generateRandomUuid() {
